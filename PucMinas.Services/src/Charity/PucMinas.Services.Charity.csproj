@@ -1,0 +1,64 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
+    <StartupObject></StartupObject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Migrations\20200922150442_initials.cs" />
+    <Compile Remove="Migrations\20200922150442_initials.Designer.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="9.0.0" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="7.0.0" />
+    <PackageReference Include="Google.Apis.Auth" Version="1.49.0" />
+    <PackageReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="2.3.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.2.6" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="2.2.6" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.7.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="appsettings.Development.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Application\" />
+    <Folder Include="Configuration\" />
+    <Folder Include="Controllers\V1\" />
+    <Folder Include="Domain\DTO\Charity\" />
+    <Folder Include="Domain\DTO\Donation\" />
+    <Folder Include="Domain\DTO\DonorPF\" />
+    <Folder Include="Domain\DTO\DonorPJ\" />
+    <Folder Include="Domain\DTO\Group\" />
+    <Folder Include="Domain\DTO\Item\" />
+    <Folder Include="Domain\DTO\Login\" />
+    <Folder Include="Domain\DTO\User\" />
+    <Folder Include="Domain\DTO\Role\" />
+    <Folder Include="Domain\Enums\" />
+    <Folder Include="Domain\Interfaces\" />
+    <Folder Include="Domain\Mappers\" />
+    <Folder Include="Domain\Models\Approvals\" />
+    <Folder Include="Domain\ValueObject\" />
+    <Folder Include="Domain\Results\Exceptions\" />
+    <Folder Include="Extensions\" />
+    <Folder Include="Filters\" />
+    <Folder Include="Infrastructure\" />
+    <Folder Include="Middleware\" />
+    <Folder Include="Resources\Charities\" />
+    <Folder Include="Resources\Items\" />
+    <Folder Include="Services\" />
+  </ItemGroup>
+
+</Project>
