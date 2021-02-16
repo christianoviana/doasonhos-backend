@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PucMinas.Services.Charity.Application;
+using PucMinas.Services.Charity.Domain.DTO.Approval;
 using PucMinas.Services.Charity.Domain.DTO.Charity;
+using PucMinas.Services.Charity.Domain.Enums;
 using PucMinas.Services.Charity.Domain.Parameters;
 using PucMinas.Services.Charity.Domain.Results;
 using PucMinas.Services.Charity.Domain.Results.Exceptions;
@@ -39,11 +41,70 @@ namespace PucMinas.Services.Charity.Controllers.V1
         [AllowAnonymous]
         [ResponseWithLinks]
         [HttpGet(Name = "GetCharities")]
-        public async Task<ActionResult<PagedResponse<CharityResponseDto>>> GetCharities([FromQuery] PaginationParams paginationParams)
+        public async Task<ActionResult<PagedResponse<CharityResponseDto>>> GetCharities([FromQuery] FilterParams filterParams, 
+                                                                                        [FromQuery] PaginationParams paginationParams)
         {
-            PagedResponse<CharityResponseDto> pagedResponse = await CharitableEntityApplication.GetAllCharities(paginationParams, true);
+            PagedResponse<CharityResponseDto> pagedResponse = await CharitableEntityApplication.GetAllCharities((c) => (c.IsActive && c.Status.Equals(ApproverStatus.APPROVED) && c.CharitableInformation != null), filterParams, paginationParams, true);
 
             return Ok(pagedResponse);
+        }
+
+        // GET: api/<controller>
+        [Authorize("Master")]
+        [ResponseWithLinks]
+        [HttpGet("restricted", Name = "GetCharitiesResticted")]
+        public async Task<ActionResult<PagedResponse<CharityResponseDto>>> GetCharitiesResticted([FromQuery] FilterParams filterParams, 
+                                                                                                 [FromQuery] PaginationParams paginationParams)
+        {
+            PagedResponse<CharityResponseDto> pagedResponse = await CharitableEntityApplication.GetAllCharities((c) => (!c.IsActive && string.IsNullOrWhiteSpace(c.Approver)), filterParams, paginationParams, true);
+
+            return Ok(pagedResponse);
+        }
+
+        // GET: api/<controller>
+        [Authorize("Master")]
+        [ResponseWithLinks]
+        [HttpGet("pending", Name = "GetPendingCharities")]
+        public async Task<ActionResult<IEnumerable<PendingCharityByStatesDto>>> GetPendingCharities([FromQuery] FilterParams filterParams,
+                                                                                                 [FromQuery] PaginationParams paginationParams)
+        {
+            var pagedResponse = await CharitableEntityApplication.GetCharityPendingByState();            
+
+            return Ok(pagedResponse);
+        }
+
+        // GET: api/<controller>
+        [AllowAnonymous]
+        [HttpGet("status", Name = "GetCharityStatus")]
+        public async Task<ActionResult<CharityStatusResponseDto>> GetCharityStatus([FromQuery] string cnpj)
+        {
+            if (cnpj == null)
+            {
+                ErrorMessage error = new ErrorMessage((int)HttpStatusCode.BadRequest, $"O cnpj deve ser informado.");
+                return BadRequest(error);
+            }
+
+            CharityStatusResponseDto charity = await CharitableEntityApplication.GetCharityStatus(c => c.Cnpj.Equals(cnpj));
+
+            return Ok(charity);
+        }
+
+        // GET api/<controller>/51110be2-5bbf-4e97-bbf5-a042ddf5d8eb/approval
+        [Authorize("GetCharityApproval")]
+        [HttpGet("{id}/approval", Name = "GetCharityApproval")]
+        public async Task<ActionResult<IEnumerable<ApprovalResponseDto>>> GetCharityApproval(Guid id)
+        {
+            CharityResponseDto charityDto = await CharitableEntityApplication.GetCharity(c => c.Id.Equals(id), true);
+
+            if (charityDto == null)
+            {
+                ErrorMessage error = new ErrorMessage((int)HttpStatusCode.NotFound, $"A entidade beneficente, {id}, não foi encontrada.");
+                return NotFound(error);
+            }
+          
+            var approvals = await CharitableEntityApplication.GetCharityApprovalResponseDto(a => a.CharitableEntityId.Equals(id));
+
+            return Ok(approvals);
         }
 
         // GET api/<controller>/51110be2-5bbf-4e97-bbf5-a042ddf5d8eb
@@ -58,7 +119,28 @@ namespace PucMinas.Services.Charity.Controllers.V1
                 ErrorMessage error = new ErrorMessage((int)HttpStatusCode.NotFound, $"A entidade beneficente, {id}, não foi encontrada.");
                 return NotFound(error);
             }
+            else if (!charityDto.Active || string.IsNullOrWhiteSpace(charityDto.Approver))
+            {
+                ErrorMessage error = new ErrorMessage((int)HttpStatusCode.BadRequest, $"A entidade beneficente, {id}, está inativa.");
+                return BadRequest(error);
+            }
 
+            return Ok(charityDto);
+        }
+
+        // GET api/<controller>/51110be2-5bbf-4e97-bbf5-a042ddf5d8eb/restricted
+        [Authorize("GetCharityRestrictedById")]
+        [HttpGet("{id}/restricted", Name = "GetCharityRestrictedById")]
+        public async Task<ActionResult<CharityResponseDto>> GetCharityRestrictedById(Guid id)
+        {
+            CharityResponseDto charityDto = await CharitableEntityApplication.GetCharity(c => c.Id.Equals(id), true);
+
+            if (charityDto == null)
+            {
+                ErrorMessage error = new ErrorMessage((int)HttpStatusCode.NotFound, $"A entidade beneficente, {id}, não foi encontrada.");
+                return NotFound(error);
+            }
+          
             return Ok(charityDto);
         }
 
@@ -120,6 +202,63 @@ namespace PucMinas.Services.Charity.Controllers.V1
             return Ok();
         }
 
+        // PUT api/<controller>/51110be2-5bbf-4e97-bbf5-a042ddf5d8eb/pendings
+        [Authorize("Master")]
+        [HttpPut("{id}/pending", Name = "ApproveCharity")]
+        public async Task<ActionResult> ApproveCharity(Guid id, [FromBody] CharityApproveDto charityApproveDto)
+        {          
+            // Check if the donor already exists
+            var charity = await CharitableEntityApplication.GetCharity((c) => c.Id.Equals(id));
+
+            if (charity == null)
+            {
+                ErrorMessage error = new ErrorMessage((int)HttpStatusCode.BadRequest, $"A entidade beneficente, {id}, não foi encontrada.");
+                return NotFound(error);
+            }          
+
+            var approvals = await CharitableEntityApplication.GetCharityApprovals(a => a.CharitableEntityId.Equals(id));
+
+            object statusObj;
+            Enum.TryParse(typeof(ApproverStatus), charityApproveDto.Status, out statusObj);
+
+            if (statusObj == null)
+            {
+                ErrorMessage error = new ErrorMessage((int)HttpStatusCode.BadRequest, $"O status '${charityApproveDto.Status}' não é válido.");
+                return NotFound(error);
+            }
+
+            ApproverStatus status = (ApproverStatus) statusObj;
+
+            if (approvals != null && approvals.Last().Status == (int) status)
+            {
+                ErrorMessage error = new ErrorMessage((int)HttpStatusCode.BadRequest, $"A entidade já se encontra nesse status '${charityApproveDto.Status}'.");
+                return NotFound(error);
+            }
+
+            await CharitableEntityApplication.UpdateCharityPending(id, charityApproveDto);
+
+
+            return Ok();
+        }
+
+        [Authorize("Master")]
+        [HttpPut("{id}/status", Name = "UpdateCharityStatus")]
+        public async Task<ActionResult> UpdateCharityStatus(Guid id, CharityStatusRequestDto charityStatusRequestDto)
+        {
+            // Check if the donor already exists
+            var charity = await CharitableEntityApplication.GetCharity((c) => c.Id.Equals(id));
+
+            if (charity == null)
+            {
+                ErrorMessage error = new ErrorMessage((int)HttpStatusCode.BadRequest, $"A entidade beneficente, {id}, não foi encontrada.");
+                return NotFound(error);
+            }
+
+            await CharitableEntityApplication.UpdateCharityStatus(id, charityStatusRequestDto);
+
+            return Ok();
+        }
+                
         // DELETE api/<controller>/51110be2-5bbf-4e97-bbf5-a042ddf5d8eb
         [Authorize("DeleteCharity")]
         [HttpDelete("{id}", Name = "DeleteCharity")]
@@ -152,12 +291,6 @@ namespace PucMinas.Services.Charity.Controllers.V1
                 return NotFound(error);
             }
 
-            if (charityDto.Information == null)
-            {
-                ErrorMessage error = new ErrorMessage((int)HttpStatusCode.BadRequest, $"As infomações da entidade beneficente não foram cadastradas.");
-                return BadRequest(error);
-            }
-
             var charityInfoItems = await CharitableInformationApplication.GetCharityInfoItem(p => p.CharitableInformationId == charityDto.Information.Id);
 
             return Ok(charityInfoItems);
@@ -176,10 +309,11 @@ namespace PucMinas.Services.Charity.Controllers.V1
                 ErrorMessage error = new ErrorMessage((int)HttpStatusCode.BadRequest, $"A entidade beneficente, {id}, não foi encontrada.");
                 return NotFound(error);
             }
-
-            if (charityResponse.Information == null)
+            else if (string.IsNullOrWhiteSpace(charityResponse.Approver) ||
+                     charityResponse.Status.ToUpper() != ApproverStatus.APPROVED.ToString() ||
+                     charityResponse.Active == false)
             {
-                ErrorMessage error = new ErrorMessage((int)HttpStatusCode.BadRequest, $"As infomações da entidade beneficente não foram cadastradas.");
+                ErrorMessage error = new ErrorMessage((int)HttpStatusCode.BadRequest, $"Não foi possível atualizar as informações. A entidade não está ativa ou aprovada.");
                 return BadRequest(error);
             }
 
@@ -225,7 +359,13 @@ namespace PucMinas.Services.Charity.Controllers.V1
             {
                 ErrorMessage error = new ErrorMessage((int)HttpStatusCode.BadRequest, $"As infomações da entidade beneficente não foram cadastradas.");
                 return BadRequest(error);
-            }          
+            }else if (string.IsNullOrWhiteSpace(charityResponse.Approver) ||
+                      charityResponse.Status.ToUpper() != ApproverStatus.APPROVED.ToString() ||
+                      charityResponse.Active == false)
+            {
+                ErrorMessage error = new ErrorMessage((int)HttpStatusCode.BadRequest, $"Não foi possível atualizar as informações. A entidade não está ativa ou aprovada.");
+                return BadRequest(error);
+            }
 
             await CharitableInformationApplication.UpdateCharityInfo(id, charityDto, Request);
 
@@ -285,9 +425,11 @@ namespace PucMinas.Services.Charity.Controllers.V1
             }
             else
             {
-                if (string.IsNullOrWhiteSpace(charityResponse.Approver) || charityResponse.Active == false)
+                if (string.IsNullOrWhiteSpace(charityResponse.Approver) || 
+                    charityResponse.Approver.ToUpper() != ApproverStatus.APPROVED.ToString() || 
+                    charityResponse.Active == false)
                 {
-                    ErrorMessage error = new ErrorMessage((int)HttpStatusCode.BadRequest, $"Não foi possível cadastrar as informações da entidade benefiecente porque a entidade não foi aprovada.");
+                    ErrorMessage error = new ErrorMessage((int)HttpStatusCode.BadRequest, $"Não foi possível cadastrar as informações da entidade benefiecente porque a entidade não está ativa ou aprovada.");
                     return BadRequest(error);
                 }
             }         

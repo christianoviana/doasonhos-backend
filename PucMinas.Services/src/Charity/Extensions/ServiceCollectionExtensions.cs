@@ -10,8 +10,13 @@ namespace PucMinas.Services.Charity.Extensions
             services.AddAuthorization(o =>
             {
                 o.AddPolicy("administrator", p => p.RequireRole("administrator"));
+                o.AddPolicy("Master", p => p.RequireRole("administrator", "manager"));
                 o.AddPolicy("items_read", p => p.RequireRole("administrator", "charitable_entity"));
-                               
+                
+                o.AddPolicy("GetGroupItems", p => p.RequireRole("administrator", "manager", "charitable_entity"));              
+
+                o.AddPolicy("GetCharityRestrictedById", p => p.RequireRole("administrator", "manager", "charitable_entity"));
+                o.AddPolicy("GetCharityApproval", p => p.RequireRole("administrator", "manager", "charitable_entity"));
                 o.AddPolicy("UpdateCharity", p => p.RequireRole("administrator", "charitable_entity"));
                 o.AddPolicy("CreateCharityInfo", p => p.RequireRole("administrator", "charitable_entity"));
                 o.AddPolicy("UpdateCharityInfo", p => p.RequireRole("administrator", "charitable_entity"));

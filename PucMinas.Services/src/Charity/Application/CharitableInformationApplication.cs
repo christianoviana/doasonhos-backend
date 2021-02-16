@@ -105,17 +105,14 @@ namespace PucMinas.Services.Charity.Application
         {
             var charityInfo = Repository.GetWhereAsQueryable(c => c.CharitableEntityId == charitableEntityId).First();
                              
-            if (charityInfoDto.items != null && charityInfoDto.items.Count > 0)
+            if (charityInfoDto.items != null)
             {
                 // Removing all current charities / items
-                var charityItems = await CharitableItemRepository.GetWhereAsync(p => p.CharitableInformationId == charitableEntityId);
+                var charityItems = await CharitableItemRepository.GetWhereAsync(p => p.CharitableInformationId == charityInfo.Id);
 
                 if (charityItems != null)
                 {
-                    foreach (var item in charityItems)
-                    {
-                        CharitableItemRepository.Delete(item);
-                    }
+                    CharitableItemRepository.DeleteRange(charityItems);
                 }
 
                 foreach (var item in charityInfoDto.items)
@@ -133,10 +130,16 @@ namespace PucMinas.Services.Charity.Application
             var query = Repository.GetWhereAsQueryable(c => c.CharitableEntityId == charitableEntityId).First();
 
             charitableInfo.PicturePath = query.PicturePath;
-            charitableInfo.PicturePath = query.PictureUrl;
+            charitableInfo.PictureUrl = query.PictureUrl;
             charitableInfo.Photo01 = query.Photo01;
-            charitableInfo.Photo02 = query.Photo02;                                                 
+            charitableInfo.Photo02 = query.Photo02;
 
+            if (charitableInfo.Photo01 != null)
+                charitableInfo.Photo01.Title = charityInfoDto.TitlePhoto01;
+
+            if (charitableInfo.Photo02 != null)
+                charitableInfo.Photo02.Title = charityInfoDto.TitlePhoto02;
+        
             charitableInfo.CharitableEntityId = charitableEntityId;
             charitableInfo.Id = query.Id;
                     
@@ -171,7 +174,7 @@ namespace PucMinas.Services.Charity.Application
                     {
                         ImagePath = result.Item1,
                         ImageUrl = result.Item2,
-                        Title = charityInfoDto.Title
+                        Title = charitableInformation?.Photo01?.Title
                     };
                     break;
                 case "image02":
@@ -181,7 +184,7 @@ namespace PucMinas.Services.Charity.Application
                     {
                         ImagePath = result.Item1,
                         ImageUrl = result.Item2,
-                        Title = charityInfoDto.Title
+                        Title = charitableInformation?.Photo02?.Title
                     };
                     break;
             }
@@ -219,16 +222,19 @@ namespace PucMinas.Services.Charity.Application
         public async Task<Guid> CreateCharityInfo(Guid charitableEntityId, CharityInfoCreateDto charityInfoDto, HttpRequest request)
         {
             var charitableInfo = this.Mapper.Map<CharitableInformation>(charityInfoDto);
-            List<string> oldImageList = new List<string>();
-                                 
+            charitableInfo.CharitableEntityId = charitableEntityId;
+            charitableInfo.Id = Guid.NewGuid();
+                                             
             charitableInfo.PicturePath = null;
             charitableInfo.PictureUrl = null;
             charitableInfo.Photo01 = null;
             charitableInfo.Photo02 = null;
 
-            var picture = await UploadImage(charityInfoDto.Picture, request, string.Format($"{charitableInfo.Id.ToString()}_{charityInfoDto.Picture.FileName.Trim()}"));
-            var photo01 = await UploadImage(charityInfoDto.Photo01, request, string.Format($"{charitableInfo.Id.ToString()}_{charityInfoDto.Photo01.FileName.Trim()}"));
-            var photo02 = await UploadImage(charityInfoDto.Photo02, request, string.Format($"{charitableInfo.Id.ToString()}_{charityInfoDto.Photo02.FileName.Trim()}"));
+            var shortId = charitableInfo.Id.ToString().Split('-')[0] + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss_fff");
+
+            var picture = await UploadImage(charityInfoDto.Picture, request, string.Format($"{shortId}{new FileInfo(charityInfoDto.Picture.FileName).Extension}"));
+            var photo01 = await UploadImage(charityInfoDto.Photo01, request, string.Format($"{shortId}{new FileInfo(charityInfoDto.Photo01.FileName).Extension}"));
+            var photo02 = await UploadImage(charityInfoDto.Photo02, request, string.Format($"{shortId}{new FileInfo(charityInfoDto.Photo02.FileName).Extension}"));
 
             charitableInfo.PicturePath = picture.Item1;
             charitableInfo.PictureUrl = picture.Item2;
@@ -246,10 +252,7 @@ namespace PucMinas.Services.Charity.Application
                 ImageUrl = photo02.Item2,
                 Title = charityInfoDto.TitlePhoto02
             };
-
-            charitableInfo.CharitableEntityId = charitableEntityId;
-            charitableInfo.Id = Guid.NewGuid();
-
+            
             try
             {
                 await this.Repository.AddAsync(charitableInfo);

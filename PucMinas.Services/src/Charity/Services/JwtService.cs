@@ -56,11 +56,11 @@ namespace PucMinas.Services.Charity.Services
 
                 foreach (var userRole in user.UserRoles)
                 {
-                    roles += userRole.Role.Name.ToLower() + ",";                  
+                    roles += userRole.Role.Name.ToLower() + ",";
                 }
                 roles = roles.Remove(roles.LastIndexOf(',')).Trim();
 
-                lstClaims.Add(new Claim(ClaimTypes.Role, roles));
+                lstClaims.Add(new Claim(ClaimTypes.Role, roles));                          
             }         
 
             JwtSecurityTokenHandler jwtTokenHandler = new JwtSecurityTokenHandler();

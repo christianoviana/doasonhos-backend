@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using PucMinas.Services.Charity.Domain.DTO.Approval;
 using PucMinas.Services.Charity.Domain.DTO.Charity;
 using PucMinas.Services.Charity.Domain.DTO.DonorPF;
 using PucMinas.Services.Charity.Domain.DTO.DonorPJ;
@@ -6,10 +7,13 @@ using PucMinas.Services.Charity.Domain.DTO.Group;
 using PucMinas.Services.Charity.Domain.DTO.Item;
 using PucMinas.Services.Charity.Domain.DTO.Role;
 using PucMinas.Services.Charity.Domain.DTO.User;
+using PucMinas.Services.Charity.Domain.Enums;
+using PucMinas.Services.Charity.Domain.Models.Approvals;
 using PucMinas.Services.Charity.Domain.Models.Charitable;
 using PucMinas.Services.Charity.Domain.Models.Donor;
 using PucMinas.Services.Charity.Domain.Models.Login;
 using PucMinas.Services.Charity.Domain.ValueObject;
+using System;
 using System.Linq;
 
 namespace PucMinas.Services.Charity.Domain.Mappers
@@ -23,6 +27,8 @@ namespace PucMinas.Services.Charity.Domain.Mappers
 
             CreateMap<RoleDto, Role>();
             CreateMap<Role, RoleDto>();
+
+            CreateMap<Approval, ApprovalResponseDto>().ForMember(d => d.Status, o => o.MapFrom(s => (ApproverStatus) s.Status));
 
             CreateMap<Group, GroupResponseDto>();
             CreateMap<Group, GroupItemsResponseDto>().ForMember(d => d.Items, o => o.MapFrom(s => s.Items.Select(i => new ItemDto() { Id = i.Id, Name = i.Name, Description = i.Description, Price = i.Price, ImageURL = i.ImageUrl })));
@@ -58,12 +64,15 @@ namespace PucMinas.Services.Charity.Domain.Mappers
             CreateMap<Address, AddressDto>();
             CreateMap<AddressDto, Address>();
             CreateMap<CharitableEntity, CharityResponseDto>()
+                 .ForMember(d => d.Active, o => o.MapFrom(s => s.IsActive))
                  .ForMember(d => d.Address, o => o.MapFrom(s => s.Address))
                  .ForMember(d => d.CellPhone, o => o.MapFrom(s => s.ContactNumber.CellPhone))
                  .ForMember(d => d.Telephone, o => o.MapFrom(s => s.ContactNumber.Telephone))
                  .ForMember(d => d.Information, o => o.MapFrom(s => s.CharitableInformation));
 
-
+            CreateMap<CharitableEntity, CharityStatusResponseDto>()
+                 .ForMember(d => d.Active, o => o.MapFrom(s => s.IsActive))
+                 .ForMember(d => d.HasCharityInformation, o => o.MapFrom(s => s.CharitableInformation != null ? true :false));
 
             CreateMap<CharityCreateDto, CharitableEntity>()
                 .ForMember(d=> d.Address, o => o.MapFrom(s => s.Address))
@@ -81,7 +90,11 @@ namespace PucMinas.Services.Charity.Domain.Mappers
 
             CreateMap<CharityInfoUpdateDto, CharitableInformation>()
                 .ForMember(d => d.Photo01, o => o.Ignore())
-                .ForMember(d => d.Photo02, o => o.Ignore());            
+                .ForMember(d => d.Photo02, o => o.Ignore());
+
+            CreateMap<CharityInfoCreateDto, CharitableInformation>()
+               .ForMember(d => d.Photo01, o => o.Ignore())
+               .ForMember(d => d.Photo02, o => o.Ignore());            
 
             CreateMap<User, UserResponseDto>().ForMember(d => d.Roles, o => o.MapFrom(s => s.UserRoles.Select(ur => ur.Role)));
         }

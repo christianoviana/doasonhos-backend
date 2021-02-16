@@ -59,6 +59,20 @@ namespace PucMinas.Services.Charity.Application
             return groupDto;
         }
 
+        public async Task<IEnumerable<GroupItemsResponseDto>> GetGroupItems()
+        {
+            List<Group> lstGroup = null;
+            var query = Repository.GetAllAsQueryable().Include(p => p.Items).OrderBy(g => g.Name);
+
+            lstGroup = await query.ToListAsync();
+
+            if (lstGroup == null) return null;
+
+            var lstGroupItemsDto = this.Mapper.Map<IEnumerable<GroupItemsResponseDto>>(lstGroup);
+
+            return lstGroupItemsDto;
+        }
+
         public async Task<GroupItemsResponseDto> GetGroupItems(Expression<Func<Group, bool>> predicate)
         {
             List<Group> lstGroup = null;

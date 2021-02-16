@@ -14,8 +14,5 @@ namespace PucMinas.Services.Charity.Domain.DTO.Charity
 
         [BindProperty(Name = "image_file")]
         public IFormFile Photo { get; set; }
-
-        [BindProperty(Name = "image_title")]
-        public string Title { get; set; }
     }
 }

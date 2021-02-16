@@ -12,16 +12,16 @@ namespace PucMinas.Services.Charity.Infrastructure.Entity.Configuation
             builder.HasKey(p => p.Id);
             builder.Property(p => p.Id).HasColumnName("Id").IsRequired().ValueGeneratedNever();
 
-            builder.Property(p => p.Nickname).HasColumnName("Nickname").IsRequired().HasMaxLength(250);
+            builder.Property(p => p.Nickname).HasColumnName("Nickname").HasMaxLength(250);
             builder.Property(p => p.About).HasColumnName("About").IsRequired().HasMaxLength(500);
             builder.Property(p => p.Goal).HasColumnName("Goal").IsRequired().HasMaxLength(500);
 
             builder.Property(p => p.ManagerDescription).HasColumnName("ManagerDescription").IsRequired().HasMaxLength(500);
             builder.Property(p => p.TransparencyDescription).HasColumnName("TransparencyDescription").IsRequired().HasMaxLength(500);
 
-            builder.Property(p => p.ManagerDescription).HasColumnName("Vision").IsRequired().HasMaxLength(500);
-            builder.Property(p => p.TransparencyDescription).HasColumnName("Mission").IsRequired().HasMaxLength(500);
-            builder.Property(p => p.TransparencyDescription).HasColumnName("Values").IsRequired().HasMaxLength(500);
+            builder.Property(p => p.Vision).HasColumnName("Vision").IsRequired().HasMaxLength(500);
+            builder.Property(p => p.Mission).HasColumnName("Mission").IsRequired().HasMaxLength(500);
+            builder.Property(p => p.Value).HasColumnName("Values").IsRequired().HasMaxLength(500);
 
             builder.Property(p => p.SiteUrl).HasColumnName("SiteUrl");
             builder.Property(p => p.Email).HasColumnName("Email");

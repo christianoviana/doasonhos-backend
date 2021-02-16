@@ -42,6 +42,11 @@ namespace PucMinas.Services.Charity.Infrastructure.Repository
             }
         }
 
+        public void DeleteRange(IEnumerable<T> model)
+        {
+            this._context.Set<T>().RemoveRange(model);
+        }
+
         public void Delete(T model)
         {
             if (model == null)
@@ -111,6 +116,6 @@ namespace PucMinas.Services.Charity.Infrastructure.Repository
                     this._context = null;
                 }
             }
-        }        
+        }
     }
 }

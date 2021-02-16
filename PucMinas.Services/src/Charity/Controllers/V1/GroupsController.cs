@@ -7,12 +7,12 @@ using PucMinas.Services.Charity.Domain.Results;
 using PucMinas.Services.Charity.Domain.Results.Exceptions;
 using PucMinas.Services.Charity.Filters;
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 
 namespace PucMinas.Services.Charity.Controllers.V1
 {
-    [Authorize("administrator")]   
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
@@ -26,6 +26,7 @@ namespace PucMinas.Services.Charity.Controllers.V1
         }
 
         // GET: api/<controller>
+        [Authorize("administrator")]
         [ResponseWithLinks]
         [HttpGet(Name = "GetGroups")]
         public async Task<ActionResult<PagedResponse<GroupResponseDto>>> GetGroups([FromQuery] PaginationParams paginationParams)
@@ -36,6 +37,7 @@ namespace PucMinas.Services.Charity.Controllers.V1
         }
 
         // GET api/<controller>/51110be2-5bbf-4e97-bbf5-a042ddf5d8eb
+        [Authorize("administrator")]
         [HttpGet("{id}", Name = "GetGroupById")]
         public async Task<ActionResult<GroupResponseDto>> GetGroupById(Guid id)
         { 
@@ -51,6 +53,7 @@ namespace PucMinas.Services.Charity.Controllers.V1
         }
 
         // GET api/<controller>/51110be2-5bbf-4e97-bbf5-a042ddf5d8eb
+        [Authorize("administrator")]
         [HttpGet("{id}/items", Name = "GetGroupItemsById")]
         public async Task<ActionResult<GroupItemsResponseDto>> GetGroupItemsById(Guid id)
         {
@@ -65,7 +68,18 @@ namespace PucMinas.Services.Charity.Controllers.V1
             return Ok(groupItemsDto);
         }
 
+        // GET api/<controller>/51110be2-5bbf-4e97-bbf5-a042ddf5d8eb
+        [Authorize("GetGroupItems")]
+        [HttpGet("items", Name = "GetGroupItems")]
+        public async Task<ActionResult<IEnumerable<GroupItemsResponseDto>>> GetGroupItems()
+        {
+            IEnumerable<GroupItemsResponseDto> groupItemsDto = await GroupApplication.GetGroupItems();
+
+            return Ok(groupItemsDto);
+        }
+
         // POST api/<controller>
+        [Authorize("administrator")]
         [HttpPost(Name = "CreateGroup")]
         public async Task<IActionResult> CreateGroup([FromBody]GroupRequestDto groupDto)
         {
@@ -83,6 +97,7 @@ namespace PucMinas.Services.Charity.Controllers.V1
         }
 
         // PUT api/<controller>/51110be2-5bbf-4e97-bbf5-a042ddf5d8eb
+        [Authorize("administrator")]
         [HttpPut("{id}", Name = "UpdateGroup")]
         public async Task<ActionResult> UpdateGroup(Guid id, [FromBody]GroupRequestDto groupDto)
         {
@@ -113,6 +128,7 @@ namespace PucMinas.Services.Charity.Controllers.V1
         }
 
         // DELETE api/<controller>/51110be2-5bbf-4e97-bbf5-a042ddf5d8eb
+        [Authorize("administrator")]
         [HttpDelete("{id}", Name = "DeleteGroup")]
         public async Task<ActionResult> DeleteGroup(Guid id)
         {

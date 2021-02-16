@@ -12,6 +12,7 @@ namespace PucMinas.Services.Charity.Infrastructure.Repository.Interfaces
         void Udate(T model);
         void DeleteById(object id);
         void Delete(T model);
+        void DeleteRange(IEnumerable<T> model);
         IQueryable<T> GetAllAsQueryable();
         Task<IEnumerable<T>> GetWhereAsync(Expression<Func<T, bool>> predicate);
         IQueryable<T> GetWhereAsQueryable(Expression<Func<T, bool>> predicate);

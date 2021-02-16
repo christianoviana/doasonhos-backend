@@ -11,5 +11,6 @@ namespace PucMinas.Services.Charity.Domain.Models.Donor
         public Item Item { get; set; }
 
         public double Quantity { get; set; }
+        //public double Valor { get; set; }
     }
 }

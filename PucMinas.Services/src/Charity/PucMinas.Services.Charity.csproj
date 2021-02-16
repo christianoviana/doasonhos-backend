@@ -37,7 +37,6 @@
     <Folder Include="Application\" />
     <Folder Include="Configuration\" />
     <Folder Include="Controllers\V1\" />
-    <Folder Include="Domain\DTO\Charity\" />
     <Folder Include="Domain\DTO\Donation\" />
     <Folder Include="Domain\DTO\DonorPF\" />
     <Folder Include="Domain\DTO\DonorPJ\" />
