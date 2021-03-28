@@ -18,7 +18,7 @@ namespace PucMinas.Services.Charity.Infrastructure.Entity.Configuation
             builder.Property(p => p.RepresentantName).HasColumnName("RepresentantName").IsRequired().HasMaxLength(150);
             builder.Property(p => p.Status).HasColumnName("Status").HasConversion(v => v.ToString(), v => (ApproverStatus) Enum.Parse(typeof(ApproverStatus), v));
             builder.Property(p => p.Approver).HasColumnName("Approver").HasMaxLength(150);
-            builder.Property(p => p.ApproverData).HasColumnName("ApproverData");
+            builder.Property(p => p.ApproverData).HasColumnType("datetime").HasColumnName("ApproverData");
             builder.Property(p => p.IsActive).HasColumnName("Activated").IsRequired();
 
             builder.OwnsOne(p => p.ContactNumber).Property(p => p.Telephone).HasColumnName("Telephone").IsRequired();

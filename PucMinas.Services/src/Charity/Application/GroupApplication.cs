@@ -26,9 +26,18 @@ namespace PucMinas.Services.Charity.Application
             this.Mapper = mapper;
         }
 
-        public async Task<PagedResponse<GroupResponseDto>> GetAllGroups(PaginationParams paginationParams)
+        public async Task<PagedResponse<GroupResponseDto>> GetAllGroups(FilterParams filterParams, PaginationParams paginationParams)
         {
             IQueryable<Group> groups = Repository.GetAllAsQueryable().OrderBy(g => g.Name);
+
+            if (filterParams != null)
+            {
+                if (!string.IsNullOrEmpty(filterParams.Term))
+                {
+                    groups = groups.Where(g => g.Name.Contains(filterParams.Term, StringComparison.InvariantCultureIgnoreCase) ||
+                                               g.Description.Contains(filterParams.Term, StringComparison.InvariantCultureIgnoreCase));
+                }
+            }
 
             PagedResponse<GroupResponseDto> pagedResponse = new PagedResponse<GroupResponseDto>();
             pagedResponse = await pagedResponse.ToPagedResponse(groups, paginationParams, this.Mapper.Map<IEnumerable<GroupResponseDto>>);
@@ -62,7 +71,12 @@ namespace PucMinas.Services.Charity.Application
         public async Task<IEnumerable<GroupItemsResponseDto>> GetGroupItems()
         {
             List<Group> lstGroup = null;
-            var query = Repository.GetAllAsQueryable().Include(p => p.Items).OrderBy(g => g.Name);
+            var query = Repository.GetAllAsQueryable().Include(p => p.Items).Select(g => new Group()
+            {
+                Name = g.Name,
+                Description = g.Description,
+                Items = g.Items.Where(i => i.IsActive == true).ToList()
+            }).OrderBy(g => g.Name);
 
             lstGroup = await query.ToListAsync();
 

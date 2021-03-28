@@ -1,10 +1,18 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using PucMinas.Services.Charity.Application;
+using PucMinas.Services.Charity.Infrastructure.Entity;
 
 namespace PucMinas.Services.Charity.Extensions
 {
     public static class ServiceCollectionExtensions
     {
+        public static void SeedDatabase(this IServiceCollection services)
+        {
+            ServiceProvider serviceProvider = services.BuildServiceProvider();
+            var AppDbContext = serviceProvider.GetRequiredService<ApplicationDbContext>();
+            SeedData.InitializeDatabase(AppDbContext);
+        }
+
         public static IServiceCollection AddAuthorizationWithPolicies(this IServiceCollection services)
         {
             services.AddAuthorization(o =>
@@ -35,6 +43,20 @@ namespace PucMinas.Services.Charity.Extensions
                 o.AddPolicy("GetDonorPJById", p => p.RequireRole("administrator", "donor_pj"));
                 o.AddPolicy("UpdateDonorPJ", p => p.RequireRole("administrator", "donor_pj"));
                 o.AddPolicy("DeleteDonorPJ", p => p.RequireRole("administrator"));
+
+                // Donor PJ Controller
+                // Donor PF Controller
+                o.AddPolicy("CreateDonationOnline", p => p.RequireRole("donor_pf", "donor_pj", "external"));
+                o.AddPolicy("CreateDonationPresential", p => p.RequireRole("donor_pf", "donor_pj", "external"));
+                o.AddPolicy("GetDonationById", p => p.RequireRole("donor_pf", "donor_pj", "external"));
+                o.AddPolicy("GetCharityDonationById", p => p.RequireRole("charitable_entity", "administrator", "manager"));
+                o.AddPolicy("GetDonorsDonationById", p => p.RequireRole("donor_pf", "donor_pj", "external"));
+                o.AddPolicy("CancelDonationById", p => p.RequireRole("charitable_entity", "donor_pf", "donor_pj"));
+                o.AddPolicy("ApproveDonationById", p => p.RequireRole("charitable_entity"));
+
+                // Reports
+                o.AddPolicy("GetUserReport", p => p.RequireRole("administrator", "manager"));
+                o.AddPolicy("GetCharityReport", p => p.RequireRole("charitable_entity", "administrator", "manager"));
             });
 
             return services;
@@ -42,6 +64,7 @@ namespace PucMinas.Services.Charity.Extensions
 
         public static IServiceCollection AddApplications(this IServiceCollection services)
         {
+            services.AddScoped(typeof(DonationApplication));
             services.AddScoped(typeof(CharitableInformationApplication));
             services.AddScoped(typeof(CharitableEntityApplication));
             services.AddScoped(typeof(DonorPJApplication));

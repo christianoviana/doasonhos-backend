@@ -17,6 +17,9 @@ namespace PucMinas.Services.Charity.Domain.DTO.Item
         [JsonProperty("price")]
         public double Price { get; set; }
 
+        [JsonProperty("activated")]
+        public bool IsActive { get; set; }
+
         [Required(ErrorMessage = "The field group_id cannot be null or empty")]
         [JsonProperty("group_id")]
         public Guid GroupId { get; set; }

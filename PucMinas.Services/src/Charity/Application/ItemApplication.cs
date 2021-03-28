@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using PucMinas.Services.Charity.Domain.DTO.Item;
+using PucMinas.Services.Charity.Domain.Models.Charitable;
 using PucMinas.Services.Charity.Domain.Models.Donor;
 using PucMinas.Services.Charity.Domain.Parameters;
 using PucMinas.Services.Charity.Domain.Results;
@@ -19,23 +20,41 @@ namespace PucMinas.Services.Charity.Application
     public class ItemApplication
     {
         private IRepositoryAsync<Item> Repository { get; set; }
+        private IRepositoryAsync<CharitableInformationItem> CharitableItemRepository { get; set; }
         private IMapper Mapper { get; set; }
 
         public ItemApplication(IRepositoryAsync<Item> repository,
+                               IRepositoryAsync<CharitableInformationItem> charitableItemRepository,
                               IMapper mapper)
         {           
             this.Repository = repository;
+            this.CharitableItemRepository = charitableItemRepository;
             this.Mapper = mapper;
         }
 
-        public async Task<PagedResponse<ItemResponseDto>> GetAllItems(PaginationParams paginationParams, bool withGroups = true)
+        public async Task<PagedResponse<ItemResponseDto>> GetAllItems(FilterParams filterParams, PaginationParams paginationParams, bool withGroups = true)
         {
             IQueryable<Item> items = null;
+            items = Repository.GetAllAsQueryable();
+
+            if (filterParams!= null)
+            {
+                if (!string.IsNullOrEmpty(filterParams.Term))
+                {
+                    items = items.Where(i => i.Name.Contains(filterParams.Term, StringComparison.InvariantCultureIgnoreCase) ||
+                                             i.Description.Contains(filterParams.Term, StringComparison.InvariantCultureIgnoreCase));
+                }
+            }
 
             if (withGroups)
-                items = Repository.GetAllAsQueryable().Include(i => i.Group).OrderBy(i => i.Name);
+            {
+                items = items.Include(i => i.Group).OrderBy(i => i.Name);
+            }
             else
-                items = Repository.GetAllAsQueryable().OrderBy(i => i.Name);
+            {
+                items = items.OrderBy(i => i.Name);
+            }
+                       
 
             PagedResponse<ItemResponseDto> pagedResponse = new PagedResponse<ItemResponseDto>();
             pagedResponse = await pagedResponse.ToPagedResponse(items, paginationParams, this.Mapper.Map<IEnumerable<ItemResponseDto>>);
@@ -47,6 +66,16 @@ namespace PucMinas.Services.Charity.Application
         {
             var items = await this.Repository.GetWhereAsync((item) => itemIds.Contains(item.Id));
             var itemsDto = this.Mapper.Map<IEnumerable<ItemResponseDto>>(items);
+
+            return itemsDto;
+        }
+
+        public async Task<IEnumerable<ItemResponseDto>> GetCharityItemIn(Guid charityInfoId, List<Guid> itemIds)
+        {
+            var items = this.CharitableItemRepository.GetWhereAsQueryable((item) => item.CharitableInformationId.Equals(charityInfoId)).Include(ci => ci.Item);
+            var filterItems =  await items.Where((item) => itemIds.Contains(item.ItemId)).ToListAsync();
+
+            var itemsDto = this.Mapper.Map<IEnumerable<ItemResponseDto>>(filterItems.Select(i=>i.Item));
 
             return itemsDto;
         }
@@ -85,8 +114,9 @@ namespace PucMinas.Services.Charity.Application
         public async Task<Guid> CreateItem(ItemCreateDto itemDto, HttpRequest request)
         {          
             var item = this.Mapper.Map<Item>(itemDto);
-
+            
             item.Id = Guid.NewGuid();
+            item.IsActive = true;
             item.ImagePath = string.Empty;
 
             if (itemDto.Photo != null && itemDto.Photo.Length > 0)

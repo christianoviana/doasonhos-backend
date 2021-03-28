@@ -91,7 +91,7 @@ namespace PucMinas.Services.Charity.Application
                 return new CharityInfoItemResponseDto() { items = new List<ItemResponseDto>() };
             }
 
-            var lstItems = lstCharitiesInfoItem.Select(e => e.Item).ToList();
+            var lstItems = lstCharitiesInfoItem.Select(e => e.Item).Where(i => i.IsActive.Equals(true)).ToList();
 
             var lstCharityInfoItemDto = Mapper.Map<IEnumerable<ItemResponseDto>>(lstItems);
 

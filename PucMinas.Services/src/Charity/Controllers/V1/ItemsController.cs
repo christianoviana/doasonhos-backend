@@ -33,9 +33,9 @@ namespace PucMinas.Services.Charity.Controllers.V1
         [ResponseWithLinks]
         [Authorize("items_read")]
         [HttpGet(Name = "GetItems")]
-        public async Task<ActionResult<PagedResponse<ItemResponseDto>>> GetItems([FromQuery] PaginationParams paginationParams)
+        public async Task<ActionResult<PagedResponse<ItemResponseDto>>> GetItems([FromQuery] FilterParams filterParams, [FromQuery] PaginationParams paginationParams)
         {
-            PagedResponse<ItemResponseDto> pagedResponse = await ItemApplication.GetAllItems(paginationParams);
+            PagedResponse<ItemResponseDto> pagedResponse = await ItemApplication.GetAllItems(filterParams, paginationParams);
 
             return Ok(pagedResponse);
         }

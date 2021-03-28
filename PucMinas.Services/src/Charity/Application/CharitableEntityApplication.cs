@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PucMinas.Services.Charity.Domain.DTO.Approval;
 using PucMinas.Services.Charity.Domain.DTO.Charity;
@@ -25,6 +27,7 @@ namespace PucMinas.Services.Charity.Application
         private IRepositoryAsync<Role> RoleRepository { get; set; }
         private IRepositoryAsync<Approval> ApprovalRepository { get; set; }        
         private IRepositoryAsync<UserRole> UserRoleRepository { get; set; }
+        private IEmailSender EmailSender { get; set; }
 
         private IMapper Mapper { get; set; }
 
@@ -33,7 +36,8 @@ namespace PucMinas.Services.Charity.Application
                                   IRepositoryAsync<Role> roleRepository,
                                   IRepositoryAsync<Approval> approvalRepository,
                                   IRepositoryAsync<UserRole> userRoleRepository,
-                                  IMapper mapper)
+                                  IMapper mapper,
+                                  IEmailSender emailSender)
         {
             this.Repository = repository;
             this.UserRepository = userRepository;
@@ -41,22 +45,35 @@ namespace PucMinas.Services.Charity.Application
             this.ApprovalRepository = approvalRepository;
             this.UserRoleRepository = userRoleRepository;
             this.Mapper = mapper;
+            this.EmailSender = emailSender;
         }
 
-        public async Task<PagedResponse<CharityResponseDto>> GetAllCharities(Expression<Func<CharitableEntity, bool>> predicate, FilterParams filterParams, PaginationParams paginationParams, bool withInformation = false)
+        public async Task<PagedResponse<CharityResponseDto>> GetAllCharities(Expression<Func<CharitableEntity, bool>> predicate, FilterCharityParams filterParams, PaginationParams paginationParams, bool withInformation = false)
         {
             IQueryable<CharitableEntity> charitableEntities = null;
 
-            if (filterParams == null || string.IsNullOrEmpty(filterParams.Term))
-            {
-                charitableEntities = Repository.GetWhereAsQueryable(predicate).OrderBy(g => g.Name);
+            charitableEntities = Repository.GetWhereAsQueryable(predicate);
+
+            if (filterParams != null)
+            {             
+
+                if (!string.IsNullOrEmpty(filterParams.State))
+                {
+                    charitableEntities = charitableEntities.Where(c => c.Address.State.ToLower().Contains(filterParams.State.ToLower()));
+                }
+
+                if (!string.IsNullOrEmpty(filterParams.City))
+                {
+                    charitableEntities = charitableEntities.Where(c => c.Address.City.ToLower().Contains(filterParams.City.ToLower()));
+                }
+
+                if (!string.IsNullOrEmpty(filterParams.Term))
+                {
+                    charitableEntities = charitableEntities.Where(c => c.Name.ToLower().Contains(filterParams.Term.ToLower()) || c.Cnpj.ToLower().Contains(filterParams.Term.ToLower()) || c.CharitableInformation.Nickname.ToLower().Contains(filterParams.Term.ToLower()));
+                }
             }
-            else
-            {
-                charitableEntities = Repository.GetWhereAsQueryable(predicate)
-                                                .Where(c => c.Name.ToLower().Contains(filterParams.Term.ToLower()) || c.Cnpj.ToLower().Contains(filterParams.Term.ToLower()) || c.CharitableInformation.Nickname.ToLower().Contains(filterParams.Term.ToLower()))
-                                                .OrderBy(g => g.Name);
-            }
+
+            charitableEntities = charitableEntities.OrderBy(g => g.Name);
 
             if (withInformation)
             {
@@ -114,7 +131,8 @@ namespace PucMinas.Services.Charity.Application
         public async Task<IEnumerable<Approval>> GetCharityApprovals(Expression<Func<Approval, bool>> predicate)
         {
             IEnumerable<Approval> lstApproval = null;
-            var query = ApprovalRepository.GetWhereAsQueryable(predicate);
+
+            var query = ApprovalRepository.GetWhereAsQueryable(predicate).OrderByDescending(a=> a.Date);
 
             lstApproval = await query.ToListAsync();
 
@@ -206,15 +224,37 @@ namespace PucMinas.Services.Charity.Application
             return charitable.Id;
         }
 
-        public async Task UpdateCharity(Guid id, CharityUpdateDto charityDto)
+        public async Task UpdateCharity(Guid id, CharityUpdateDto charityDto, bool pending_data)
         {
             var charityModel = Repository.GetWhereAsQueryable(c => c.Id.Equals(id)).First();
             var charitableEntity = this.Mapper.Map<CharitableEntity>(charityDto);
 
             charitableEntity.Id = charityModel.Id;
+            charitableEntity.Status = charityModel.Status;
+            charitableEntity.Approver = charityModel.Approver;
+            charitableEntity.ApproverData = charityModel.ApproverData;
+            charitableEntity.IsActive = charityModel.IsActive;
             charitableEntity.UserId = charityModel.UserId;
+                     
+            if (pending_data)
+            {
+                var approval = new Approval() {Id = Guid.NewGuid(), CharitableEntityId = charityModel.Id, Date = DateTime.Now, Message = "Análise Pendente", Detail = string.Empty, Status = (int)ApproverStatus.PENDING };
+
+                await ApprovalRepository.AddAsync(approval);
+
+                charitableEntity.ApproverData = DateTime.Now;
+                charitableEntity.Approver = string.Empty;
+                charitableEntity.Status = ApproverStatus.PENDING;
+                charitableEntity.IsActive = false;
+            }
+            else
+            {
+                charitableEntity.Name = charityModel.Name;
+                charitableEntity.Cnpj = charityModel.Cnpj;
+            }
 
             this.Repository.Udate(charitableEntity);
+
             await this.Repository.SaveAsync();
         }
 
@@ -250,8 +290,48 @@ namespace PucMinas.Services.Charity.Application
 
             switch (status)
             {
+                case ApproverStatus.PENDING_DATA:                   
                 case ApproverStatus.APPROVED:
-                    charityModel.IsActive = true;
+                case ApproverStatus.REPROVED:
+                    var lstUsers = await this.UserRepository.GetWhereAsync(u => u.Id == charityModel.UserId);
+                    var user = lstUsers.FirstOrDefault();
+                    string title = string.Empty;
+
+                    if (status == ApproverStatus.APPROVED)
+                    {
+                        charityModel.IsActive = true;
+                        title = "Doa Sonhos - Cadastro Aprovado";
+
+                        if (user != null)
+                        {
+                            user.IsActive = true;
+                            this.UserRepository.Udate(user);
+                        }
+                    }
+                    else if (status == ApproverStatus.REPROVED)
+                    {
+                        charityModel.IsActive = false;
+                        title = "Doa Sonhos - Cadastro Reprovado";
+
+                        if (user != null)
+                        {
+                            user.IsActive = false;
+                            this.UserRepository.Udate(user);                            
+                        }
+                    }
+                    else if (status == ApproverStatus.PENDING_DATA)
+                    {
+                        charityModel.IsActive = false;
+                        title = "Doa Sonhos - Correção Solicitada";
+
+                        if (user != null)
+                        {
+                            user.IsActive = true;
+                            this.UserRepository.Udate(user);
+                        }
+                    }
+
+                    await this.SendEmail(user.Login, charityModel.Name, title, string.Format("Message: {0}\r\nDetalhes: {1}",  approval.Message, string.IsNullOrWhiteSpace(approval.Detail)?"-":approval.Detail));
                     break;
                 default:
                     charityModel.IsActive = false;
@@ -268,5 +348,19 @@ namespace PucMinas.Services.Charity.Application
             await this.Repository.SaveAsync();
         }
         
+        private async Task SendEmail(string toEmail, string name, string title, string message)
+        {
+            try
+            {
+                // Sent an email
+                string _htmlMessage = string.Format(" <h2>Olá, {0}</h2><h3>{1}</h3>", name, message);
+
+                await this.EmailSender.SendEmailAsync(toEmail, title, _htmlMessage);
+            }
+            catch (Exception)
+            {
+            }
+        }
+      
     }
 }

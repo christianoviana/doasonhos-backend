@@ -39,15 +39,16 @@ namespace PucMinas.Services.Charity.Infrastructure.Entity
             modelBuilder.ApplyConfiguration(new GroupConfiguration());
             modelBuilder.ApplyConfiguration(new ItemConfiguration());
 
+            modelBuilder.ApplyConfiguration(new CharitableEntityConfiguration());
+            modelBuilder.ApplyConfiguration(new CharitableInformationConfiguration());
+
             modelBuilder.ApplyConfiguration(new DonationConfiguration());
             modelBuilder.ApplyConfiguration(new DonationItemConfiguration());
+
             modelBuilder.ApplyConfiguration(new DonorPFConfiguration());
             modelBuilder.ApplyConfiguration(new DonorPJConfiguration());
 
             modelBuilder.ApplyConfiguration(new ApprovalConfiguration());
-
-            modelBuilder.ApplyConfiguration(new CharitableEntityConfiguration());
-            modelBuilder.ApplyConfiguration(new CharitableInformationConfiguration());
             modelBuilder.ApplyConfiguration(new CharitableInformationItemConfiguration());
 
             base.OnModelCreating(modelBuilder);

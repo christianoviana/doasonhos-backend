@@ -12,6 +12,7 @@ namespace PucMinas.Services.Charity.Domain.Models.Donor
         public double Price { get; set; }
         public string ImagePath { get; set; }
         public string ImageUrl { get; set; }
+        public bool IsActive { get; set; }
 
         public IEnumerable<DonationItem> DonationItem { get; set; }
         public IEnumerable<CharitableInformationItem> CharitableInformationItem { get; set; }

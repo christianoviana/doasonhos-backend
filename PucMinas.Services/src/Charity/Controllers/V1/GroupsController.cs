@@ -29,9 +29,9 @@ namespace PucMinas.Services.Charity.Controllers.V1
         [Authorize("administrator")]
         [ResponseWithLinks]
         [HttpGet(Name = "GetGroups")]
-        public async Task<ActionResult<PagedResponse<GroupResponseDto>>> GetGroups([FromQuery] PaginationParams paginationParams)
+        public async Task<ActionResult<PagedResponse<GroupResponseDto>>> GetGroups([FromQuery] FilterParams filterParams, [FromQuery] PaginationParams paginationParams)
         {
-            PagedResponse<GroupResponseDto> pagedResponse = await GroupApplication.GetAllGroups(paginationParams);
+            PagedResponse<GroupResponseDto> pagedResponse = await GroupApplication.GetAllGroups(filterParams, paginationParams);
 
             return Ok(pagedResponse);
         }

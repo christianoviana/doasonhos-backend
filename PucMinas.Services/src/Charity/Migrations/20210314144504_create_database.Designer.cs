@@ -2,7 +2,6 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PucMinas.Services.Charity.Infrastructure.Entity;
@@ -10,16 +9,15 @@ using PucMinas.Services.Charity.Infrastructure.Entity;
 namespace PucMinas.Services.Charity.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20201229024312_correct_charity_info_collumn")]
-    partial class correct_charity_info_collumn
+    [Migration("20210314144504_create_database")]
+    partial class create_database
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "2.2.6-servicing-10079")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128)
-                .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("PucMinas.Services.Charity.Domain.Models.Approvals.Approval", b =>
                 {
@@ -30,6 +28,7 @@ namespace PucMinas.Services.Charity.Migrations
 
                     b.Property<DateTime>("Date")
                         .HasColumnName("Date")
+                        .HasColumnType("datetime")
                         .HasMaxLength(10);
 
                     b.Property<string>("Detail")
@@ -61,7 +60,8 @@ namespace PucMinas.Services.Charity.Migrations
                         .HasMaxLength(150);
 
                     b.Property<DateTime?>("ApproverData")
-                        .HasColumnName("ApproverData");
+                        .HasColumnName("ApproverData")
+                        .HasColumnType("datetime");
 
                     b.Property<string>("Cnpj")
                         .IsRequired()
@@ -181,13 +181,17 @@ namespace PucMinas.Services.Charity.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnName("Id");
 
+                    b.Property<bool>("Canceled")
+                        .HasColumnName("Canceled");
+
                     b.Property<Guid>("CharitableEntityId");
 
                     b.Property<bool>("Completed")
                         .HasColumnName("Completed");
 
                     b.Property<DateTime>("Date")
-                        .HasColumnName("Date");
+                        .HasColumnName("Date")
+                        .HasColumnType("datetime");
 
                     b.Property<double>("Total")
                         .HasColumnName("Total");
@@ -211,7 +215,11 @@ namespace PucMinas.Services.Charity.Migrations
                     b.Property<Guid>("ItemId")
                         .HasColumnName("ItemId");
 
-                    b.Property<double>("Quantity")
+                    b.Property<string>("Name");
+
+                    b.Property<double>("Price");
+
+                    b.Property<int>("Quantity")
                         .HasColumnName("Quantity");
 
                     b.HasKey("DonationId", "ItemId");
@@ -228,7 +236,7 @@ namespace PucMinas.Services.Charity.Migrations
 
                     b.Property<DateTime>("Birthday")
                         .HasColumnName("Birthday")
-                        .HasMaxLength(15);
+                        .HasColumnType("datetime");
 
                     b.Property<string>("CPF")
                         .IsRequired()
@@ -321,6 +329,8 @@ namespace PucMinas.Services.Charity.Migrations
 
                     b.Property<string>("ImageUrl")
                         .HasColumnName("ImageUrl");
+
+                    b.Property<bool>("IsActive");
 
                     b.Property<string>("Name")
                         .IsRequired()

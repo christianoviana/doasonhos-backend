@@ -11,7 +11,7 @@ namespace PucMinas.Services.Charity.Infrastructure.Entity.Configuation
             builder.ToTable("TbApproval");
             builder.HasKey(p => p.Id);
             builder.Property(p => p.Id).HasColumnName("Id").IsRequired().ValueGeneratedNever();
-            builder.Property(p => p.Date).HasColumnName("Date").IsRequired().HasMaxLength(10);
+            builder.Property(p => p.Date).HasColumnType("datetime").HasColumnName("Date").IsRequired().HasMaxLength(10);
             builder.Property(p => p.Message).HasColumnName("Message").IsRequired().HasMaxLength(250);
             builder.Property(p => p.Detail).HasColumnName("Detail").HasMaxLength(250);
             builder.Property(p => p.Status).HasColumnName("Status").IsRequired();          

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -22,6 +23,7 @@ using PucMinas.Services.Charity.Services;
 using System;
 using System.IO;
 using System.Text;
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 
 namespace Charity
 {
@@ -36,7 +38,7 @@ namespace Charity
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
-        {
+        {           
             services.AddMvc
                     (o => {
                         o.ReturnHttpNotAcceptable = true;                        
@@ -45,6 +47,8 @@ namespace Charity
                         o.InvalidModelStateResponseFactory = ac => new BadRequestObjectResult(ac.ModelState.ToErrorMessage());
                     })
                     .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+
+            services.AddCors();
 
             services.AddApiVersioning(o =>
             {
@@ -57,9 +61,18 @@ namespace Charity
             jwtSettingsSection.Bind(jwtSettings);
 
             services.Configure<JwtSettings>(jwtSettingsSection);
+
+            EmailSenderOptions emailSender = new EmailSenderOptions();
+            var emailSenderSection = Configuration.GetSection("EmailSenderOptions");
+            services.Configure<EmailSenderOptions>(emailSenderSection);
+            emailSenderSection.Bind(emailSender);
+
             services.AddAutoMapper(typeof(ApplicationProfile));
 
-            services.AddDbContext<ApplicationDbContext>(o => o.UseSqlServer(Configuration.GetConnectionString("DoasonhoConnection"), opt => opt.CommandTimeout(60)));
+            //services.AddDbContext<ApplicationDbContext>(o => o.UseSqlServer(Configuration.GetConnectionString("DoasonhoConnection"), opt => opt.CommandTimeout(60)));
+            services.AddDbContext<ApplicationDbContext>(o => o.UseMySql(Configuration.GetConnectionString("DoasonhoConnection"), opt => opt.CommandTimeout(60)));
+          
+            services.SeedDatabase();
 
             services.AddApplications();
 
@@ -67,6 +80,7 @@ namespace Charity
             services.AddScoped(typeof(IPagedRepositoryAsync<>), typeof(PagedRepositoryAsync<>));
             services.AddSingleton<IJwtService, JwtService>();
             services.AddTransient(typeof(LinkFilter));
+            services.AddTransient<IEmailSender, MailKitEmailSender>();
 
             services.AddAuthorizationWithPolicies();
 
@@ -91,8 +105,8 @@ namespace Charity
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
-        {
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IServiceProvider serviceProvider)
+        {          
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

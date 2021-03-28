@@ -48,6 +48,25 @@ namespace PucMinas.Services.Charity.Application
             return pagedResponse;
         }
 
+        public async Task<PagedResponse<DonorPFResponseDto>> GetAllDonorsPF(Expression<Func<DonorPF, bool>> predicate, PaginationParams paginationParams)
+        {
+            IQueryable<DonorPF> donorsPf = Repository.GetWhereAsQueryable(predicate).OrderBy(d => d.Name);
+
+            PagedResponse<DonorPFResponseDto> pagedResponse = new PagedResponse<DonorPFResponseDto>();
+            pagedResponse = await pagedResponse.ToPagedResponse(donorsPf, paginationParams, this.Mapper.Map<IEnumerable<DonorPFResponseDto>>);
+
+            return pagedResponse;
+        }
+
+        public async Task<IEnumerable<DonorPFResponseDto>> GetAllDonorsPF(Expression<Func<DonorPF, bool>> predicate)
+        {
+            IQueryable<DonorPF> donorsPf = Repository.GetWhereAsQueryable(predicate).OrderBy(d => d.Name);
+
+            IEnumerable<DonorPFResponseDto> lstDonorsPf = this.Mapper.Map<IEnumerable<DonorPFResponseDto>>(await donorsPf.ToListAsync());
+
+            return lstDonorsPf;
+        }      
+
         public async Task<IEnumerable<DonorPFResponseDto>> GetDonorIn(List<Guid> donorPFIds)
         {
             var donorsPF = await this.Repository.GetWhereAsync((item) => donorPFIds.Contains(item.Id));

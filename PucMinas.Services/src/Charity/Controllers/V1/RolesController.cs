@@ -28,9 +28,9 @@ namespace PucMinas.Services.Charity.Controllers.V1
         // GET: api/<controller>
         [ResponseWithLinks]
         [HttpGet(Name = "GetRoles")]
-        public async Task<ActionResult<PagedResponse<RoleDto>>> GetRoles([FromQuery] PaginationParams paginationParams)
+        public async Task<ActionResult<PagedResponse<RoleDto>>> GetRoles([FromQuery] FilterParams filterParams, [FromQuery] PaginationParams paginationParams)
         {
-            PagedResponse<RoleDto> pagedResponse = await RoleApplication.GetAllRoles(paginationParams);
+            PagedResponse<RoleDto> pagedResponse = await RoleApplication.GetAllRoles(filterParams, paginationParams);
 
             return Ok(pagedResponse);
         }

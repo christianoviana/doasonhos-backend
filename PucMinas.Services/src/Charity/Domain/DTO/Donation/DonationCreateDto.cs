@@ -1,29 +1,25 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace PucMinas.Services.Charity.Domain.DTO.Donation
 {
     public class DonationCreateDto
     {
-        [JsonProperty("date")]
-        public DateTime Date { get; set; }
         [JsonProperty("total")]
+        [Required(ErrorMessage = "The field total cannot be null or empty", AllowEmptyStrings = false)]
         public double Total { get; set; }
-        [JsonProperty("completed")]
-        public bool Completed { get; set; }
-
+        
         [JsonProperty("items")]
         public IEnumerable<DonationitemRequestDto> DonationItem { get; set; }
 
         [JsonProperty("donor_id")]
-        public string UserId { get; set; }
-        [JsonProperty("donor_name")]
-        public string UserName { get; set; }
-        [JsonProperty("donor_login")]
-        public string UserLogin { get; set; }
+        [Required(ErrorMessage = "The field donor_id cannot be null or empty", AllowEmptyStrings = false)]
+        public Guid UserId { get; set; }
 
         [JsonProperty("charitable_entity_id")]
+        [Required(ErrorMessage = "The field charitable_entity_id cannot be null or empty", AllowEmptyStrings = false)]
         public Guid CharitableEntityId { get; set; }
     }
 }

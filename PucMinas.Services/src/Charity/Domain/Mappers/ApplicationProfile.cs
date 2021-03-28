@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using PucMinas.Services.Charity.Domain.DTO.Approval;
 using PucMinas.Services.Charity.Domain.DTO.Charity;
+using PucMinas.Services.Charity.Domain.DTO.Donation;
 using PucMinas.Services.Charity.Domain.DTO.DonorPF;
 using PucMinas.Services.Charity.Domain.DTO.DonorPJ;
 using PucMinas.Services.Charity.Domain.DTO.Group;
@@ -97,6 +98,13 @@ namespace PucMinas.Services.Charity.Domain.Mappers
                .ForMember(d => d.Photo02, o => o.Ignore());            
 
             CreateMap<User, UserResponseDto>().ForMember(d => d.Roles, o => o.MapFrom(s => s.UserRoles.Select(ur => ur.Role)));
+
+            CreateMap<Donation, DonationCreateDto>();
+            CreateMap<Donation, DonationResponseDto>()
+                .ForMember(d => d.DonationItem, o => o.MapFrom(s => s.DonationItem.Select(di => new DonationItemResponseDto() { Name = di.Name, Price = di.Price, Quantity = di.Quantity })))
+                .ForMember(d => d.CharitableEntity, o => o.MapFrom(s => s.CharitableEntity));
+
+            CreateMap<DonationCreateDto, Donation>().ForMember(d => d.DonationItem, o => o.Ignore());
         }
     }
 }

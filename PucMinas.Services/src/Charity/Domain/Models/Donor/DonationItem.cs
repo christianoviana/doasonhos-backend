@@ -10,7 +10,8 @@ namespace PucMinas.Services.Charity.Domain.Models.Donor
         public Guid ItemId { get; set; }
         public Item Item { get; set; }
 
-        public double Quantity { get; set; }
-        //public double Valor { get; set; }
+        public string Name { get; set; }
+        public int Quantity { get; set; }
+        public double Price { get; set; }
     }
 }

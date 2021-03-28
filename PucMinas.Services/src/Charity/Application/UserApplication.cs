@@ -35,14 +35,30 @@ namespace PucMinas.Services.Charity.Application
             this.Mapper = mapper;
         }
 
-        public async Task<PagedResponse<UserResponseDto>> GetAllUsers(PaginationParams paginationParams, bool withRoles = true)
+        public async Task<PagedResponse<UserResponseDto>> GetAllUsers(FilterParams filterParams, PaginationParams paginationParams, bool withRoles = true)
         {
             IQueryable<User> users = null;
 
-            if (withRoles)            
-                users = Repository.GetAllAsQueryable().OrderBy(u => u.Login).Include(e => e.UserRoles).ThenInclude(ur => ur.Role);
+            users = Repository.GetAllAsQueryable().OrderBy(u => u.Login);
+
+            if (filterParams != null)
+            {
+                if (!string.IsNullOrEmpty(filterParams.Term))
+                {
+                    users = users.Where(u => u.Login.Contains(filterParams.Term, StringComparison.InvariantCultureIgnoreCase) ||
+                                             u.Type.ToString().Contains(filterParams.Term, StringComparison.InvariantCultureIgnoreCase));
+                }
+            }
+
+
+            if (withRoles)
+            {
+                users = users.Include(e => e.UserRoles).ThenInclude(ur => ur.Role);
+            }
             else
+            {
                 users = Repository.GetAllAsQueryable();
+            }
 
             PagedResponse<UserResponseDto> pagedResponse = new PagedResponse<UserResponseDto>();
             pagedResponse = await pagedResponse.ToPagedResponse(users, paginationParams, this.Mapper.Map<IEnumerable<UserResponseDto>>);
@@ -90,20 +106,24 @@ namespace PucMinas.Services.Charity.Application
                 case LoginType.DONOR_PF:
                     owner.Id = user.DonorPF.Id;
                     owner.Name = user.DonorPF.Name;
+                    owner.Status = ApproverStatus.NONE.ToString();
                     break;
                 case LoginType.DONOR_PJ:
                     owner.Id = user.DonorPJ.Id;
                     owner.Name = user.DonorPJ.CompanyName;
+                    owner.Status = ApproverStatus.NONE.ToString();
                     break;
                 case LoginType.CHARITABLE_ENTITY:
                     owner.Id = user.CharitableEntity.Id;
                     owner.Name = user.CharitableEntity.Name;
+                    owner.Status = user.CharitableEntity.Status.ToString();
                     break;
                 case LoginType.MANAGER:
                 case LoginType.ADMINISTRATOR:
                 case LoginType.NONE:
                     owner.Id = Guid.Empty;
                     owner.Name = string.Empty;
+                    owner.Status = ApproverStatus.NONE.ToString();
                     break;
             }         
 
@@ -178,8 +198,17 @@ namespace PucMinas.Services.Charity.Application
             user.Password = "EXTERNAL_LOGIN";
             user.Type = LoginType.EXTERNAL;
             user.IsActive = true;
-           
+
+            var lstRole = await RoleRepository.GetWhereAsync(r => r.Name.ToLower().Equals("external"));
+
+            if (!lstRole.Any())
+            {
+                throw new Exception("Cannot find role external");
+            }
+
+            await UserRoleRepository.AddAsync(new UserRole() { User = user, RoleId = lstRole.First().Id });
             await this.Repository.AddAsync(user);          
+
             await this.Repository.SaveAsync();
 
             return user;
@@ -187,7 +216,7 @@ namespace PucMinas.Services.Charity.Application
 
         public async Task<Guid> CreateUser(UserCreateDto userDto)
         {
-            var user = this.Mapper.Map<User>(userDto);
+            var user = this.Mapper.Map<User>(userDto);         
 
             user.Id = Guid.NewGuid();
             user.Login = user.Login.ToLower();
@@ -216,6 +245,19 @@ namespace PucMinas.Services.Charity.Application
             await this.Repository.SaveAsync();
 
             return user.Id;
+        }
+
+        public async Task<Int32> GetCountAllUsers(Expression<Func<User, bool>> predicate)
+        {
+            var query = Repository.GetWhereAsQueryable(predicate);
+            var allUsers = await query.ToListAsync();
+
+            if (allUsers == null)
+            {
+                return 0;
+            }
+
+            return allUsers.Count();
         }
     }
 }

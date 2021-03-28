@@ -11,6 +11,9 @@ namespace PucMinas.Services.Charity.Domain.DTO.User
         [JsonProperty("name")]
         public string Name { get; set; }
 
+        [JsonProperty("status")]
+        public string Status { get; set; }
+
         [JsonProperty("type")]
         public string type { get; set; }
     }

@@ -12,11 +12,13 @@ x86/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
+PublishProfiles/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
 
 src/Charity/appsettings.Development.json
+src/Charity/appsettings.Production.json
 
 # exclude everything
 Charities/

@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace PucMinas.Services.Charity.Migrations
 {
-    public partial class initials : Migration
+    public partial class create_database : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -57,7 +57,9 @@ namespace PucMinas.Services.Charity.Migrations
                     Name = table.Column<string>(maxLength: 250, nullable: false),
                     Description = table.Column<string>(maxLength: 500, nullable: false),
                     Price = table.Column<double>(nullable: false),
-                    Image = table.Column<byte[]>(nullable: true),
+                    ImagePath = table.Column<string>(nullable: true),
+                    ImageUrl = table.Column<string>(nullable: true),
+                    IsActive = table.Column<bool>(nullable: false),
                     GroupId = table.Column<Guid>(nullable: false)
                 },
                 constraints: table =>
@@ -84,7 +86,7 @@ namespace PucMinas.Services.Charity.Migrations
                     Activated = table.Column<bool>(nullable: false),
                     Status = table.Column<string>(nullable: false),
                     Approver = table.Column<string>(maxLength: 150, nullable: true),
-                    ApproverData = table.Column<DateTime>(nullable: false),
+                    ApproverData = table.Column<DateTime>(type: "datetime", nullable: true),
                     City = table.Column<string>(maxLength: 200, nullable: false),
                     State = table.Column<string>(maxLength: 200, nullable: false),
                     Country = table.Column<string>(maxLength: 200, nullable: false),
@@ -111,9 +113,9 @@ namespace PucMinas.Services.Charity.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(nullable: false),
+                    Name = table.Column<string>(maxLength: 250, nullable: false),
                     CPF = table.Column<string>(maxLength: 20, nullable: false),
-                    DonorPF_CPF = table.Column<string>(nullable: true),
-                    Birthday = table.Column<DateTime>(maxLength: 15, nullable: false),
+                    Birthday = table.Column<DateTime>(type: "datetime", nullable: false),
                     Genre = table.Column<string>(maxLength: 50, nullable: false),
                     City = table.Column<string>(maxLength: 200, nullable: false),
                     State = table.Column<string>(maxLength: 200, nullable: false),
@@ -180,21 +182,50 @@ namespace PucMinas.Services.Charity.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "TbApproval",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    Date = table.Column<DateTime>(type: "datetime", maxLength: 10, nullable: false),
+                    Message = table.Column<string>(maxLength: 250, nullable: false),
+                    Detail = table.Column<string>(maxLength: 250, nullable: true),
+                    Status = table.Column<int>(nullable: false),
+                    CharitableEntityId = table.Column<Guid>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TbApproval", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TbApproval_TbCharitableEntity_CharitableEntityId",
+                        column: x => x.CharitableEntityId,
+                        principalTable: "TbCharitableEntity",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "TbCharitableInformation",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(nullable: false),
-                    Nickname = table.Column<string>(maxLength: 250, nullable: false),
-                    Description = table.Column<string>(maxLength: 500, nullable: false),
-                    Picture = table.Column<byte[]>(nullable: true),
-                    Photo01 = table.Column<byte[]>(nullable: false),
-                    Title_1 = table.Column<string>(nullable: false),
-                    Photo02 = table.Column<byte[]>(nullable: false),
-                    Title_2 = table.Column<string>(nullable: false),
-                    Photo03 = table.Column<byte[]>(nullable: false),
-                    Title_3 = table.Column<string>(nullable: false),
-                    Photo04 = table.Column<byte[]>(nullable: false),
-                    Title_4 = table.Column<string>(nullable: false),
+                    Nickname = table.Column<string>(maxLength: 250, nullable: true),
+                    About = table.Column<string>(maxLength: 500, nullable: false),
+                    Goal = table.Column<string>(maxLength: 500, nullable: false),
+                    ManagerDescription = table.Column<string>(maxLength: 500, nullable: false),
+                    TransparencyDescription = table.Column<string>(maxLength: 500, nullable: false),
+                    Vision = table.Column<string>(maxLength: 500, nullable: false),
+                    Mission = table.Column<string>(maxLength: 500, nullable: false),
+                    Values = table.Column<string>(maxLength: 500, nullable: false),
+                    PicturePath = table.Column<string>(nullable: true),
+                    PictureUrl = table.Column<string>(nullable: true),
+                    SiteUrl = table.Column<string>(nullable: true),
+                    Email = table.Column<string>(nullable: true),
+                    ImagePath01 = table.Column<string>(nullable: false),
+                    ImageUrl01 = table.Column<string>(nullable: false),
+                    Title01 = table.Column<string>(nullable: false),
+                    ImagePath02 = table.Column<string>(nullable: false),
+                    ImageUrl02 = table.Column<string>(nullable: false),
+                    Title02 = table.Column<string>(nullable: false),
                     CharitableEntityId = table.Column<Guid>(nullable: false)
                 },
                 constraints: table =>
@@ -213,9 +244,11 @@ namespace PucMinas.Services.Charity.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(nullable: false),
-                    Date = table.Column<DateTime>(nullable: false),
+                    Date = table.Column<DateTime>(type: "datetime", nullable: false),
                     Total = table.Column<double>(nullable: false),
                     UserId = table.Column<Guid>(nullable: false),
+                    Completed = table.Column<bool>(nullable: false),
+                    Canceled = table.Column<bool>(nullable: false),
                     CharitableEntityId = table.Column<Guid>(nullable: false)
                 },
                 constraints: table =>
@@ -236,12 +269,38 @@ namespace PucMinas.Services.Charity.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "TbCharitableInformationItem",
+                columns: table => new
+                {
+                    CharitableInformationId = table.Column<Guid>(nullable: false),
+                    ItemId = table.Column<Guid>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TbCharitableInformationItem", x => new { x.CharitableInformationId, x.ItemId });
+                    table.ForeignKey(
+                        name: "FK_TbCharitableInformationItem_TbCharitableInformation_Charitab~",
+                        column: x => x.CharitableInformationId,
+                        principalTable: "TbCharitableInformation",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_TbCharitableInformationItem_TbItem_ItemId",
+                        column: x => x.ItemId,
+                        principalTable: "TbItem",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "TbDonationItem",
                 columns: table => new
                 {
                     DonationId = table.Column<Guid>(nullable: false),
                     ItemId = table.Column<Guid>(nullable: false),
-                    Quantity = table.Column<double>(nullable: false)
+                    Name = table.Column<string>(nullable: true),
+                    Quantity = table.Column<int>(nullable: false),
+                    Price = table.Column<double>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -261,6 +320,11 @@ namespace PucMinas.Services.Charity.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_TbApproval_CharitableEntityId",
+                table: "TbApproval",
+                column: "CharitableEntityId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_TbCharitableEntity_UserId",
                 table: "TbCharitableEntity",
                 column: "UserId",
@@ -273,16 +337,19 @@ namespace PucMinas.Services.Charity.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_TbCharitableInformationItem_ItemId",
+                table: "TbCharitableInformationItem",
+                column: "ItemId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_TbDonation_CharitableEntityId",
                 table: "TbDonation",
-                column: "CharitableEntityId",
-                unique: true);
+                column: "CharitableEntityId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TbDonation_UserId",
                 table: "TbDonation",
-                column: "UserId",
-                unique: true);
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TbDonationItem_ItemId",
@@ -307,6 +374,12 @@ namespace PucMinas.Services.Charity.Migrations
                 column: "GroupId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_TbUser_Login",
+                table: "TbUser",
+                column: "Login",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_TbUserRoles_UserId",
                 table: "TbUserRoles",
                 column: "UserId");
@@ -315,7 +388,10 @@ namespace PucMinas.Services.Charity.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "TbCharitableInformation");
+                name: "TbApproval");
+
+            migrationBuilder.DropTable(
+                name: "TbCharitableInformationItem");
 
             migrationBuilder.DropTable(
                 name: "TbDonationItem");
@@ -328,6 +404,9 @@ namespace PucMinas.Services.Charity.Migrations
 
             migrationBuilder.DropTable(
                 name: "TbUserRoles");
+
+            migrationBuilder.DropTable(
+                name: "TbCharitableInformation");
 
             migrationBuilder.DropTable(
                 name: "TbDonation");

@@ -13,7 +13,7 @@ namespace PucMinas.Services.Charity.Infrastructure.Entity.Configuation
             builder.Property(p => p.Id).HasColumnName("Id").IsRequired().ValueGeneratedNever();
             builder.Property(p => p.Name).HasColumnName("Name").IsRequired().HasMaxLength(250);
             builder.Property(p => p.CPF).HasColumnName("CPF").IsRequired().HasMaxLength(20);
-            builder.Property(p => p.Birthday).HasColumnName("Birthday").IsRequired().HasMaxLength(15);
+            builder.Property(p => p.Birthday).HasColumnType("datetime").HasColumnName("Birthday").IsRequired();
             builder.Property(p => p.Genre).HasColumnName("Genre").IsRequired().HasMaxLength(50);
                    
             builder.OwnsOne(p => p.Address).Property(p => p.Country).HasColumnName("Country").IsRequired().HasMaxLength(200); 

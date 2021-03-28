@@ -25,9 +25,18 @@ namespace PucMinas.Services.Charity.Application
             this.Mapper = mapper;
         }
 
-        public async Task<PagedResponse<RoleDto>> GetAllRoles(PaginationParams paginationParams)
+        public async Task<PagedResponse<RoleDto>> GetAllRoles(FilterParams filterParams, PaginationParams paginationParams)
         {
             IQueryable<Role> roles = Repository.GetAllAsQueryable().OrderBy(r => r.Name);
+
+            if (filterParams != null)
+            {
+                if (!string.IsNullOrEmpty(filterParams.Term))
+                {
+                    roles = roles.Where(r => r.Name.Contains(filterParams.Term, StringComparison.InvariantCultureIgnoreCase) ||
+                                             r.Description.Contains(filterParams.Term, StringComparison.InvariantCultureIgnoreCase));
+                }
+            }
 
             PagedResponse<RoleDto> pagedResponse = new PagedResponse<RoleDto>();
             pagedResponse = await pagedResponse.ToPagedResponse(roles, paginationParams, this.Mapper.Map<IEnumerable<RoleDto>>);

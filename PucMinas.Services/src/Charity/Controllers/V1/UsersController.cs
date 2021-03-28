@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using PucMinas.Services.Charity.Application;
 using PucMinas.Services.Charity.Domain.DTO.Role;
 using PucMinas.Services.Charity.Domain.DTO.User;
+using PucMinas.Services.Charity.Domain.Enums;
 using PucMinas.Services.Charity.Domain.Models.Login;
 using PucMinas.Services.Charity.Domain.Parameters;
 using PucMinas.Services.Charity.Domain.Results;
@@ -35,9 +36,9 @@ namespace PucMinas.Services.Charity.Controllers.V1
         // GET: api/<controller>
         [ResponseWithLinks]
         [HttpGet(Name = "GetUsers")]
-        public async Task<ActionResult<PagedResponse<UserResponseDto>>> GetUsers([FromQuery] PaginationParams paginationParams)
+        public async Task<ActionResult<PagedResponse<UserResponseDto>>> GetUsers([FromQuery] FilterParams filterParams, [FromQuery] PaginationParams paginationParams)
         {
-            var pagedResponse = await UserApplication.GetAllUsers(paginationParams);
+            var pagedResponse = await UserApplication.GetAllUsers(filterParams, paginationParams);
 
             return Ok(pagedResponse);
         }
@@ -85,6 +86,7 @@ namespace PucMinas.Services.Charity.Controllers.V1
             }
 
             IEnumerable<RoleDto> lstRoles = null;
+            RoleDto role = null;
 
             if (userDto.Roles?.Count > 0)
             {
@@ -103,6 +105,11 @@ namespace PucMinas.Services.Charity.Controllers.V1
                     ErrorMessage error = new ErrorMessage((int)HttpStatusCode.BadRequest, $"Existem regras inválidas.");
                     return BadRequest(error);
                 }               
+            }
+            else
+            {
+                role = await RoleApplication.GetRole(r=>r.Name.ToUpper().Equals(userDto.type.ToUpper()));
+                userDto.Roles = new List<Guid>() { role.Id };
             }
 
             var Id = await UserApplication.CreateUser(userDto);
@@ -146,7 +153,8 @@ namespace PucMinas.Services.Charity.Controllers.V1
         // PUT api/<controller>/51110be2-5bbf-4e97-bbf5-a042ddf5d8eb
         [HttpPut("{id}/roles", Name = "UpdateUserRole")]
         public async Task<ActionResult> UpdateUserRole(Guid id, [FromBody]UserRoleUpdateDto roleDto)
-        {
+        {           
+
             // Check if the user exists
             var user = await UserApplication.GetUser(u => u.Id == id, false);
 
@@ -155,7 +163,7 @@ namespace PucMinas.Services.Charity.Controllers.V1
                 ErrorMessage error = new ErrorMessage((int)HttpStatusCode.NotFound, $"O usuário, {id}, não foi encontrado.");
                 return NotFound(error);
             }
-            
+                      
             IEnumerable<RoleDto> lstRoles = null;
 
             if (roleDto.Roles.Count > 0)
@@ -174,7 +182,7 @@ namespace PucMinas.Services.Charity.Controllers.V1
                 {
                     ErrorMessage error = new ErrorMessage((int)HttpStatusCode.BadRequest, $"Existem regras inválidas.");
                     return BadRequest(error);
-                }
+                }              
             }
 
             await UserApplication.UpdateAllUserRoles(user, lstRoles);

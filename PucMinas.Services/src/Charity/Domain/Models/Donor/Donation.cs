@@ -17,6 +17,7 @@ namespace PucMinas.Services.Charity.Domain.Models.Donor
         public User User { get; set; }
 
         public bool Completed { get; set; }
+        public bool Canceled { get; set; }
 
         public Guid CharitableEntityId { get; set; }
         public CharitableEntity CharitableEntity { get; set; }

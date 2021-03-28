@@ -7,5 +7,6 @@
         PENDING_DATA = 3,
         REPROVED = 4,
         APPROVED = 5,
+        NONE = 0
     }
 }

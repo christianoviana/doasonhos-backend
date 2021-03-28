@@ -21,6 +21,9 @@ namespace PucMinas.Services.Charity.Domain.DTO.Item
         [JsonProperty("image_url")]
         public string ImageURL { get; set; }
 
+        [JsonProperty("activated")]
+        public bool IsActive { get; set; }
+
         [JsonProperty("group")]
         public GroupResponseDto Group { get; set; }
     }
