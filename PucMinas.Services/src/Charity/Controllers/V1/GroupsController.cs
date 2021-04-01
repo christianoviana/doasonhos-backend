@@ -8,6 +8,7 @@ using PucMinas.Services.Charity.Domain.Results.Exceptions;
 using PucMinas.Services.Charity.Filters;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -134,11 +135,18 @@ namespace PucMinas.Services.Charity.Controllers.V1
         {
             // Check if the group exists
             GroupResponseDto groupDto = await GroupApplication.GetGroup(r => r.Id.Equals(id));
+            GroupItemsResponseDto groupItemsDto = await GroupApplication.GetGroupItems(g => g.Id.Equals(id));
 
             if (groupDto == null)
             {
                 ErrorMessage error = new ErrorMessage((int)HttpStatusCode.NotFound, $"O grupo, {id}, não foi encontrado.");
                 return NotFound(error);
+            }
+
+            if (groupItemsDto.Items != null && groupItemsDto.Items.Count() > 0)
+            {
+                ErrorMessage error = new ErrorMessage((int)HttpStatusCode.NotFound, $"O grupo não foi deletado. Existem itens associados ao grupo.");
+                return BadRequest(error);
             }
             
             await GroupApplication.DeleteGroup(groupDto);

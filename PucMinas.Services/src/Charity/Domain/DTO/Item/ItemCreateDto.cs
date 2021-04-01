@@ -17,7 +17,7 @@ namespace PucMinas.Services.Charity.Domain.DTO.Item
         public string Description { get; set; }
 
         [BindProperty(Name = "price")]
-        public double Price { get; set; }
+        public string Price { get; set; }
 
         [BindProperty(Name = "photo")]
         public IFormFile Photo { get; set; }

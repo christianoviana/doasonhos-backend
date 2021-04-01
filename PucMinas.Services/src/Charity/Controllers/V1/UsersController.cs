@@ -131,6 +131,12 @@ namespace PucMinas.Services.Charity.Controllers.V1
                 return NotFound(error);
             }
 
+            if (user.Type == LoginType.ADMINISTRATOR)
+            {
+                ErrorMessage error = new ErrorMessage((int)HttpStatusCode.NotFound, $"Não foi possível atualizar o usuário.");
+                return BadRequest(error);
+            }
+
             if (user.Login.ToLower() != userDto.Login.ToLower())
             {
                 var user_login_check = await UserApplication.GetUserDto(u => u.Login.ToLower() == userDto.Login.ToLower(), false);
@@ -142,10 +148,7 @@ namespace PucMinas.Services.Charity.Controllers.V1
                 }
             }
 
-            user.Login = userDto.Login;
-            user.IsActive = userDto.IsActive;
-
-            await UserApplication.UpdateUser(user);
+            await UserApplication.UpdateUser(id, userDto);
 
             return Ok();
         }
@@ -201,6 +204,12 @@ namespace PucMinas.Services.Charity.Controllers.V1
             {
                 ErrorMessage error = new ErrorMessage((int)HttpStatusCode.NotFound, $"O usuário, {id}, não foi encontrado.");
                 return NotFound(error);
+            }
+
+            if (user.Type == LoginType.ADMINISTRATOR)
+            {
+                ErrorMessage error = new ErrorMessage((int)HttpStatusCode.NotFound, $"Não foi possível apagar o usuário.");
+                return BadRequest(error);
             }
 
             await UserApplication.DeleteUser(user);

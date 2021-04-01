@@ -149,12 +149,18 @@ namespace PucMinas.Services.Charity.Application
             return user;
         }
 
-        public async Task UpdateUser(User user)
+        public async Task UpdateUser(Guid id, UserUpdateDto user)
         {
-            user.Login = user.Login.ToLower();
+            var userModel = Repository.GetWhereAsQueryable(u => u.Id.Equals(id)).FirstOrDefault();
 
-            this.Repository.Udate(user);
-            await this.Repository.SaveAsync();           
+            if (userModel != null)
+            {
+                userModel.Login = user.Login.ToLower();
+                userModel.IsActive = user.IsActive;
+
+                this.Repository.Udate(userModel);
+                await this.Repository.SaveAsync();
+            }                    
         }
 
         public async Task DeleteUser(User user)

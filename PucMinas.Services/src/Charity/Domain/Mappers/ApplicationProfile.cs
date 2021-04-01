@@ -15,6 +15,7 @@ using PucMinas.Services.Charity.Domain.Models.Donor;
 using PucMinas.Services.Charity.Domain.Models.Login;
 using PucMinas.Services.Charity.Domain.ValueObject;
 using System;
+using System.Globalization;
 using System.Linq;
 
 namespace PucMinas.Services.Charity.Domain.Mappers
@@ -36,7 +37,8 @@ namespace PucMinas.Services.Charity.Domain.Mappers
             CreateMap<GroupResponseDto, Group>();
             CreateMap<GroupRequestDto, Group>();           
 
-            CreateMap<ItemCreateDto, Item>().ForMember(d=> d.ImagePath, o => o.Ignore());
+            CreateMap<ItemCreateDto, Item>().ForMember(d=> d.ImagePath, o => o.Ignore())
+                                            .ForMember(d=> d.Price, o => o.MapFrom(i => Double.Parse(i.Price, CultureInfo.InvariantCulture)));
             CreateMap<ItemUpdateDto, Item>();
 
             CreateMap<Item, ItemResponseDto>();
