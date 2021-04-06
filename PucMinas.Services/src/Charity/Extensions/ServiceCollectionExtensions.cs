@@ -51,7 +51,7 @@ namespace PucMinas.Services.Charity.Extensions
                 o.AddPolicy("GetDonationById", p => p.RequireRole("donor_pf", "donor_pj", "external"));
                 o.AddPolicy("GetCharityDonationById", p => p.RequireRole("charitable_entity", "administrator", "manager"));
                 o.AddPolicy("GetDonorsDonationById", p => p.RequireRole("donor_pf", "donor_pj", "external"));
-                o.AddPolicy("CancelDonationById", p => p.RequireRole("charitable_entity", "donor_pf", "donor_pj"));
+                o.AddPolicy("CancelDonationById", p => p.RequireRole("charitable_entity", "donor_pf", "donor_pj", "external"));
                 o.AddPolicy("ApproveDonationById", p => p.RequireRole("charitable_entity"));
 
                 // Reports

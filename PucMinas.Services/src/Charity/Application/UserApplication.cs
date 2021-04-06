@@ -125,6 +125,11 @@ namespace PucMinas.Services.Charity.Application
                     owner.Name = string.Empty;
                     owner.Status = ApproverStatus.NONE.ToString();
                     break;
+                case LoginType.EXTERNAL:
+                    owner.Id = user.Id;
+                    owner.Name = user.Login;
+                    owner.Status = ApproverStatus.NONE.ToString();
+                    break;
             }         
 
             return owner;
@@ -213,8 +218,7 @@ namespace PucMinas.Services.Charity.Application
             }
 
             await UserRoleRepository.AddAsync(new UserRole() { User = user, RoleId = lstRole.First().Id });
-            await this.Repository.AddAsync(user);          
-
+                  
             await this.Repository.SaveAsync();
 
             return user;
@@ -242,11 +246,11 @@ namespace PucMinas.Services.Charity.Application
                         await this.UserRoleRepository.AddAsync(new UserRole() { User = user, RoleId = _role.Id });
                     }
                 }
-                else
-                {
-                    await this.Repository.AddAsync(user);
-                }
-            }         
+            }
+            else
+            {
+                await this.Repository.AddAsync(user);
+            }        
 
             await this.Repository.SaveAsync();
 

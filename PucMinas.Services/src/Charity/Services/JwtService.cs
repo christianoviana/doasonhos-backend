@@ -5,6 +5,7 @@ using PucMinas.Services.Charity.Domain.DTO.Login;
 using PucMinas.Services.Charity.Domain.Enums;
 using PucMinas.Services.Charity.Domain.Interfaces;
 using PucMinas.Services.Charity.Domain.Models.Login;
+using PucMinas.Services.Charity.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;

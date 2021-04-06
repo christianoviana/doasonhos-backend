@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using PucMinas.Services.Charity.Extensions;
 
 namespace PucMinas.Services.Charity.Application
 {
@@ -103,7 +104,7 @@ namespace PucMinas.Services.Charity.Application
         {          
             var donation = this.Mapper.Map<Donation>(donationDto);
             donation.Id = Guid.NewGuid();
-            donation.Date = DateTime.Now;
+            donation.Date = DateTime.Now.ToBrazilianTimeZone();
             donation.Completed = completed;
             donation.Canceled = false;
 

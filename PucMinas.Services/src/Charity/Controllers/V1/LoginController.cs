@@ -72,7 +72,9 @@ namespace PucMinas.Services.Charity.Controllers.V1
                 
                 if (user == null)
                 {
-                    user = await UserApplication.CreateExternalUser(payload.Email);
+                    var _user = await UserApplication.CreateExternalUser(payload.Email);
+
+                    user = await UserApplication.GetUser(u => (u.Id.Equals(_user.Id)));
                 }
                 else if (!user.IsActive)
                 {

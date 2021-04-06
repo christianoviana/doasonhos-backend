@@ -13,6 +13,7 @@ namespace PucMinas.Services.Charity.Domain.DTO.Charity
         public string Name { get; set; }
 
         [BindProperty(Name = "image_file")]
+        [Required(ErrorMessage = "The field image_file cannot be null or empty", AllowEmptyStrings = false)]
         public IFormFile Photo { get; set; }
     }
 }

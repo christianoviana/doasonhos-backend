@@ -59,17 +59,17 @@ namespace PucMinas.Services.Charity.Application
 
                 if (!string.IsNullOrEmpty(filterParams.State))
                 {
-                    charitableEntities = charitableEntities.Where(c => c.Address.State.ToLower().Contains(filterParams.State.ToLower()));
+                    charitableEntities = charitableEntities.Where(c => c.Address.State.ToLower().Contains(filterParams.State.ToLower(), StringComparison.InvariantCultureIgnoreCase));
                 }
 
                 if (!string.IsNullOrEmpty(filterParams.City))
                 {
-                    charitableEntities = charitableEntities.Where(c => c.Address.City.ToLower().Contains(filterParams.City.ToLower()));
+                    charitableEntities = charitableEntities.Where(c => c.Address.City.ToLower().Contains(filterParams.City.ToLower(), StringComparison.InvariantCultureIgnoreCase));
                 }
 
                 if (!string.IsNullOrEmpty(filterParams.Term))
                 {
-                    charitableEntities = charitableEntities.Where(c => c.Name.ToLower().Contains(filterParams.Term.ToLower()) || c.Cnpj.ToLower().Contains(filterParams.Term.ToLower()) || c.CharitableInformation.Nickname.ToLower().Contains(filterParams.Term.ToLower()));
+                    charitableEntities = charitableEntities.Where(c => c.Name.ToLower().Contains(filterParams.Term.ToLower(), StringComparison.InvariantCultureIgnoreCase) || c.Cnpj.ToLower().Contains(filterParams.Term.ToLower(), StringComparison.InvariantCultureIgnoreCase) || c.CharitableInformation.Nickname.ToLower().Contains(filterParams.Term.ToLower(), StringComparison.InvariantCultureIgnoreCase));
                 }
             }
 
@@ -203,7 +203,7 @@ namespace PucMinas.Services.Charity.Application
             {
                 Id = Guid.NewGuid(),
                 CharitableEntityId = charitable.Id,
-                Date = DateTime.Now,
+                Date = DateTime.UtcNow.ToBrazilianTimeZone(),
                 Message = "Análise Pendente",
                 Status = (int)ApproverStatus.PENDING           
             };
@@ -238,11 +238,11 @@ namespace PucMinas.Services.Charity.Application
                      
             if (pending_data)
             {
-                var approval = new Approval() {Id = Guid.NewGuid(), CharitableEntityId = charityModel.Id, Date = DateTime.Now, Message = "Análise Pendente", Detail = string.Empty, Status = (int)ApproverStatus.PENDING };
+                var approval = new Approval() {Id = Guid.NewGuid(), CharitableEntityId = charityModel.Id, Date = DateTime.UtcNow.ToBrazilianTimeZone(), Message = "Análise Pendente", Detail = string.Empty, Status = (int)ApproverStatus.PENDING };
 
                 await ApprovalRepository.AddAsync(approval);
 
-                charitableEntity.ApproverData = DateTime.Now;
+                charitableEntity.ApproverData = DateTime.UtcNow.ToBrazilianTimeZone();
                 charitableEntity.Approver = string.Empty;
                 charitableEntity.Status = ApproverStatus.PENDING;
                 charitableEntity.IsActive = false;
@@ -276,7 +276,7 @@ namespace PucMinas.Services.Charity.Application
             {
                 Id = Guid.NewGuid(),
                 CharitableEntityId = charityModel.Id,
-                Date = DateTime.Now,
+                Date = DateTime.UtcNow.ToBrazilianTimeZone(),
                 Message = charityApproveDto.Message,
                 Detail = charityApproveDto.Detail,
                 Status = (int)status
@@ -284,7 +284,7 @@ namespace PucMinas.Services.Charity.Application
 
             await ApprovalRepository.AddAsync(approval);
 
-            charityModel.ApproverData = DateTime.Now;
+            charityModel.ApproverData = DateTime.UtcNow.ToBrazilianTimeZone();
             charityModel.Approver = charityApproveDto.ApproverName;
             charityModel.Status = status;
 

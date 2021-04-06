@@ -232,7 +232,9 @@ namespace PucMinas.Services.Charity.Controllers.V1
 
                 await this.EmailSender.SendEmailAsync(user.Login, $"Doa Sonhos - Doação Presencial", message);
             }
-            catch (Exception){}
+            catch (Exception ex){
+                Console.WriteLine(ex);
+            }
 
             return CreatedAtRoute("GetDonationById", new { id = donationId }, null);
         }    

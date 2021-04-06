@@ -73,6 +73,7 @@ namespace PucMinas.Services.Charity.Application
             List<Group> lstGroup = null;
             var query = Repository.GetAllAsQueryable().Include(p => p.Items).Select(g => new Group()
             {
+                Id = g.Id,
                 Name = g.Name,
                 Description = g.Description,
                 Items = g.Items.Where(i => i.IsActive == true).ToList()

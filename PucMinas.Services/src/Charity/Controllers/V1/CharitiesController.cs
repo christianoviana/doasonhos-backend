@@ -303,6 +303,13 @@ namespace PucMinas.Services.Charity.Controllers.V1
                 return NotFound(error);
             }
 
+
+            if (charityDto.Information == null)
+            {
+                ErrorMessage error = new ErrorMessage((int)HttpStatusCode.NotFound, $"As informações complementares da entidade beneficente não foram cadastradas.");
+                return NotFound(error);
+            }
+
             var charityInfoItems = await CharitableInformationApplication.GetCharityInfoItem(p => p.CharitableInformationId == charityDto.Information.Id);
 
             return Ok(charityInfoItems);

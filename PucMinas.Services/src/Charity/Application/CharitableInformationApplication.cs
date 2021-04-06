@@ -157,17 +157,22 @@ namespace PucMinas.Services.Charity.Application
             var imageName = charityInfoDto.Name.ToLower();
             string oldImage = string.Empty;
 
-            Tuple<string, string> result = await UploadImage(charityInfoDto.Photo, request, string.Format($"{charitableInformation.Id.ToString()}_{charityInfoDto.Photo.FileName.Trim()}"));
+            var shortId = charitableInformation.Id.ToString().Split('-')[0];
+            Tuple<string, string> result = null;
 
             switch (imageName)
             {
                 case "picture":
+                    result = await UploadImage(charityInfoDto.Photo, request, string.Format($"{shortId}_{DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss")}_picture{new FileInfo(charityInfoDto.Photo.FileName).Extension}"));
+
                     oldImage = charitableInformation.PicturePath;
 
                     charitableInformation.PicturePath = result.Item1;
                     charitableInformation.PictureUrl = result.Item2;
                     break;
                 case "image01":
+                    result = await UploadImage(charityInfoDto.Photo, request, string.Format($"{shortId}_{DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss")}_photo1{new FileInfo(charityInfoDto.Photo.FileName).Extension}"));
+
                     oldImage = charitableInformation.Photo01?.ImagePath;
 
                     charitableInformation.Photo01 = new Image()
@@ -178,6 +183,8 @@ namespace PucMinas.Services.Charity.Application
                     };
                     break;
                 case "image02":
+                    result = await UploadImage(charityInfoDto.Photo, request, string.Format($"{shortId}_{DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss")}_photo2{new FileInfo(charityInfoDto.Photo.FileName).Extension}"));
+
                     oldImage = charitableInformation.Photo02?.ImagePath;
 
                     charitableInformation.Photo02 = new Image()
@@ -230,11 +237,11 @@ namespace PucMinas.Services.Charity.Application
             charitableInfo.Photo01 = null;
             charitableInfo.Photo02 = null;
 
-            var shortId = charitableInfo.Id.ToString().Split('-')[0] + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss_fff");
+            var shortId = charitableInfo.Id.ToString().Split('-')[0];
 
-            var picture = await UploadImage(charityInfoDto.Picture, request, string.Format($"{shortId}{new FileInfo(charityInfoDto.Picture.FileName).Extension}"));
-            var photo01 = await UploadImage(charityInfoDto.Photo01, request, string.Format($"{shortId}{new FileInfo(charityInfoDto.Photo01.FileName).Extension}"));
-            var photo02 = await UploadImage(charityInfoDto.Photo02, request, string.Format($"{shortId}{new FileInfo(charityInfoDto.Photo02.FileName).Extension}"));
+            var picture = await UploadImage(charityInfoDto.Picture, request, string.Format($"{shortId}_{DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss")}_picture{new FileInfo(charityInfoDto.Picture.FileName).Extension}"));
+            var photo01 = await UploadImage(charityInfoDto.Photo01, request, string.Format($"{shortId}_{DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss")}_photo1{new FileInfo(charityInfoDto.Picture.FileName).Extension}"));
+            var photo02 = await UploadImage(charityInfoDto.Photo02, request, string.Format($"{shortId}_{DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss")}_photo2{new FileInfo(charityInfoDto.Picture.FileName).Extension}"));
 
             charitableInfo.PicturePath = picture.Item1;
             charitableInfo.PictureUrl = picture.Item2;

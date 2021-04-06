@@ -22,5 +22,7 @@ namespace PucMinas.Services.Charity.Configuration
         public string Sender_EMail { get; set; }
 
         public string Sender_Name { get; set; }
+
+        public string Api_Key { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace PucMinas.Services.Charity.Extensions
@@ -18,6 +19,24 @@ namespace PucMinas.Services.Charity.Extensions
 
                 return hash.ToString();
             }
+        }
+
+        public static DateTime ToTimeZonelDatetime(this DateTime value, string timeZone)
+        {
+            var myTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZone);
+
+            var currentDateTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, myTimeZone);
+
+            return currentDateTime;
+        }
+
+        public static DateTime ToBrazilianTimeZone(this DateTime value)
+        {
+            var myTimeZone = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time");
+
+            var currentDateTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, myTimeZone);
+
+            return currentDateTime;
         }
     }
 }

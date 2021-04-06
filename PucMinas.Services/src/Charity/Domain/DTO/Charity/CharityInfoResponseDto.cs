@@ -31,12 +31,12 @@ namespace PucMinas.Services.Charity.Domain.DTO.Charity
 
         [JsonProperty("image01_url")]
         public string Photo01 { get; set; }
-        [JsonProperty("title_image02")]
+        [JsonProperty("title_image01")]
         public string TitlePhoto01 { get; set; }
 
         [JsonProperty("image02_url")]
         public string Photo02 { get; set; }
-        [JsonProperty("title_image01")]
+        [JsonProperty("title_image02")]
         public string TitlePhoto02 { get; set; }
 
         [JsonProperty("site_url")]
